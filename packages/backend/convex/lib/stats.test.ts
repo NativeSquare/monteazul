@@ -1,0 +1,126 @@
+import { describe, expect, test } from "vitest";
+import { aggregateEvents, bogotaBucketKey } from "./stats";
+
+/**
+ * The statistics aggregation module (ADR-0001): totals and day/week/month time
+ * series computed AT READ from the Événement journal — never from stored
+ * counters. All bucketing is anchored to America/Bogota (UTC-5, no DST), the
+ * product's reference timezone, so a Visite at 23h50 in Bogota lands on the
+ * right day even though it is already the next UTC day.
+ */
+
+// Reference instants (ms epoch), with their known America/Bogota wall clock.
+// 2026-07-05 is a Sunday, 2026-07-06 a Monday in Bogota.
+const JUL6_11H = Date.UTC(2026, 6, 6, 16, 0); //     2026-07-06 11:00 Bogota (Mon)
+const JUL5_2330 = Date.UTC(2026, 6, 6, 4, 30); //    2026-07-05 23:30 Bogota (Sun)
+const JUL6_0000 = Date.UTC(2026, 6, 6, 5, 0); //     2026-07-06 00:00 Bogota (Mon)
+const JUL5_2350 = Date.UTC(2026, 6, 6, 4, 50); //    2026-07-05 23:50 Bogota (Sun)
+const JUL6_0010 = Date.UTC(2026, 6, 6, 5, 10); //    2026-07-06 00:10 Bogota (Mon)
+const JUL31_2330 = Date.UTC(2026, 7, 1, 4, 30); //   2026-07-31 23:30 Bogota (Fri)
+const AUG1_0000 = Date.UTC(2026, 7, 1, 5, 0); //     2026-08-01 00:00 Bogota (Sat)
+
+describe("bogotaBucketKey", () => {
+  test("day bucket is the America/Bogota calendar day (YYYY-MM-DD)", () => {
+    expect(bogotaBucketKey(JUL6_11H, "day")).toBe("2026-07-06");
+  });
+
+  test("day rolls at Bogota midnight, not UTC midnight (borne de période)", () => {
+    // Both instants share the SAME UTC day (2026-07-06) yet straddle Bogota
+    // midnight, so only a Bogota clock splits them.
+    expect(bogotaBucketKey(JUL5_2330, "day")).toBe("2026-07-05");
+    expect(bogotaBucketKey(JUL6_0000, "day")).toBe("2026-07-06");
+  });
+
+  test("month bucket is the Bogota year-month (YYYY-MM), rolling at Bogota midnight", () => {
+    expect(bogotaBucketKey(JUL31_2330, "month")).toBe("2026-07");
+    expect(bogotaBucketKey(AUG1_0000, "month")).toBe("2026-08");
+  });
+
+  test("week bucket is the Monday of the Bogota week (YYYY-MM-DD), rolling Sun→Mon", () => {
+    // Sunday 2026-07-05 belongs to the week that started Monday 2026-06-29;
+    // Monday 2026-07-06 opens the next week.
+    expect(bogotaBucketKey(JUL5_2330, "week")).toBe("2026-06-29");
+    expect(bogotaBucketKey(JUL6_0000, "week")).toBe("2026-07-06");
+  });
+});
+
+describe("aggregateEvents", () => {
+  test("totals count Visites and Contactos por WhatsApp separately", () => {
+    const { totals } = aggregateEvents(
+      [
+        { type: "visit", timestamp: JUL6_11H },
+        { type: "visit", timestamp: JUL6_11H },
+        { type: "whatsapp_click", timestamp: JUL6_11H },
+        { type: "whatsapp_click", timestamp: JUL6_11H },
+        { type: "whatsapp_click", timestamp: JUL6_11H },
+      ],
+      "day",
+    );
+    expect(totals).toEqual({ visits: 2, whatsappContacts: 3 });
+  });
+
+  test("no events → zero totals and an empty series", () => {
+    expect(aggregateEvents([], "day")).toEqual({
+      totals: { visits: 0, whatsappContacts: 0 },
+      series: [],
+    });
+  });
+
+  test("day series splits a 23h50 vs 00h10 Bogota pair into the right two days", () => {
+    const { series } = aggregateEvents(
+      [
+        { type: "visit", timestamp: JUL5_2350 },
+        { type: "visit", timestamp: JUL6_0010 },
+      ],
+      "day",
+    );
+    expect(series).toEqual([
+      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 0 },
+    ]);
+  });
+
+  test("day series is keyed by Bogota day and sorted ascending", () => {
+    const { series } = aggregateEvents(
+      [
+        { type: "visit", timestamp: JUL6_0000 },
+        { type: "whatsapp_click", timestamp: JUL6_0000 },
+        { type: "visit", timestamp: JUL5_2330 },
+      ],
+      "day",
+    );
+    expect(series).toEqual([
+      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1 },
+    ]);
+  });
+
+  test("week series groups by the Monday of the Bogota week", () => {
+    const { series } = aggregateEvents(
+      [
+        { type: "visit", timestamp: JUL5_2330 }, // week of 2026-06-29
+        { type: "visit", timestamp: JUL6_0000 }, // week of 2026-07-06
+        { type: "whatsapp_click", timestamp: JUL6_11H }, // week of 2026-07-06
+      ],
+      "week",
+    );
+    expect(series).toEqual([
+      { bucket: "2026-06-29", visits: 1, whatsappContacts: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1 },
+    ]);
+  });
+
+  test("month series groups by the Bogota year-month across a month boundary", () => {
+    const { series } = aggregateEvents(
+      [
+        { type: "visit", timestamp: JUL31_2330 }, // still July in Bogota
+        { type: "whatsapp_click", timestamp: AUG1_0000 }, // August in Bogota
+      ],
+      "month",
+    );
+    expect(series).toEqual([
+      { bucket: "2026-07", visits: 1, whatsappContacts: 0 },
+      { bucket: "2026-08", visits: 0, whatsappContacts: 1 },
+    ]);
+  });
+});
