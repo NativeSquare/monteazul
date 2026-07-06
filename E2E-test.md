@@ -30,3 +30,9 @@ Format par entrée :
 - [ ] **Listing publié uniquement** : lancer `npx convex run seed:seedDev` puis ouvrir `apps/web` (`/`) → les sections par catégorie s'affichent ; aucune fiche `pendiente` (« Snacks Verde Vida », « Trueques del Barrio ») ni `suspendido` (« Postres Dulce Monte ») n'apparaît.
 - [ ] **Filtre par chip** : cliquer la chip « Comida » → seule la section « Comida y bebida » reste visible ; cliquer « Todos » → toutes les sections publiées reviennent.
 - [ ] **Badge horario temps réel** : sur une carte en mode plages, le badge affiche « Abierto » avec « cierra a las HH:MM » pendant les heures d'ouverture (heure de Bogota) et « Cerrado · abre a las HH:MM » en dehors ; une fiche en mode disponible affiche « Disponible · sobre pedido / con cita previa ».
+
+## #5 — Recherche full-text insensible aux accents
+
+- [ ] **Recherche insensible aux accents/casse** — Précondition : annuaire seedé avec « Panadería El Trigal » (publicado). Action : taper `panaderia` (sans accent) dans la barre de recherche. Résultat : la fiche « Panadería El Trigal » apparaît dans les résultats.
+- [ ] **Recherche combinée au chip catégorie** — Précondition : deux fiches publicado contenant le mot « artesanal », l'une en « Hogar y artesanías », l'autre en « Comida y bebida ». Action : sélectionner le chip « Hogar » puis taper `artesanal`. Résultat : seule la fiche « Hogar y artesanías » s'affiche.
+- [ ] **État « Sin resultados » + effacement** — Précondition : annuaire chargé. Action : taper `zzzzz` (aucune correspondance). Résultat : l'écran affiche « Sin resultados » / « No encontramos negocios para «zzzzz». Prueba otra búsqueda o categoría. » ; cliquer le bouton d'effacement (X) de la barre restaure la liste complète.
