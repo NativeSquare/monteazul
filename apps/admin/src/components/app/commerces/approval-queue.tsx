@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { IconEdit } from "@tabler/icons-react";
 import { api } from "@packages/backend/convex/_generated/api";
 
@@ -13,26 +12,7 @@ import {
   EstadoTransitionButton,
   RemoveCommerceButton,
 } from "@/components/app/commerces/commerce-actions";
-
-type QueueItem = FunctionReturnType<
-  typeof api.table.adminCommerces.approvalQueue
->[number];
-
-function formatMinutes(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}:${String(m).padStart(2, "0")}`;
-}
-
-function horarioSummary(horario: QueueItem["horario"]): string {
-  if (!horario) return "Sin definir";
-  if (horario.mode === "disponible") {
-    return `Disponible · ${horario.label}`;
-  }
-  return `${horario.days} · ${formatMinutes(horario.from)}–${formatMinutes(
-    horario.to,
-  )}`;
-}
+import { horarioSummary } from "@/lib/horario-format";
 
 function Row({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
