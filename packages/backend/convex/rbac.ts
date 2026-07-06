@@ -62,6 +62,34 @@ export async function requireEntreprise(
   return await requireRole(ctx, "entreprise");
 }
 
+export type OwnedCommerce = {
+  userId: Id<"users">;
+  commerce: Doc<"commerces">;
+};
+
+/**
+ * Require the caller to be the owner of a given Commerce.
+ *
+ * Enforces the ownership rule of the glossary: a Commerce is always attached to
+ * exactly one account, and only that owner may read or modify its fiche. Refuses
+ * an anonymous caller, an unknown Commerce, and any caller who is not the owner.
+ * Returns the caller id and the owned Commerce for the guarded operation.
+ */
+export async function requireCommerceOwner(
+  ctx: QueryCtx | MutationCtx,
+  commerceId: Id<"commerces">
+): Promise<OwnedCommerce> {
+  const { userId } = await requireAuthenticated(ctx);
+  const commerce = await ctx.db.get(commerceId);
+  if (!commerce) {
+    throw new ConvexError({ message: "Negocio no encontrado." });
+  }
+  if (commerce.ownerId !== userId) {
+    throw new ConvexError({ message: "No tienes acceso a este negocio." });
+  }
+  return { userId, commerce };
+}
+
 /**
  * Assign the default role (`user`) to a freshly created account.
  *
