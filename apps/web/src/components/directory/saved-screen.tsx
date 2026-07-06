@@ -6,6 +6,7 @@ import { ChevronLeft, Heart } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 
+import { AuthCtaButtons } from "./auth-cta-buttons";
 import { CommerceCard } from "./commerce-card";
 
 const SCREEN = "mx-auto min-h-screen max-w-[480px] bg-surface";
@@ -86,20 +87,7 @@ function SignedOutState() {
         Crea una cuenta o inicia sesión para guardar tus negocios favoritos y
         encontrarlos fácilmente.
       </div>
-      <div className="mx-auto mt-5 flex max-w-[280px] flex-col gap-2">
-        <Link
-          href="/signup"
-          className="flex w-full items-center justify-center rounded-button bg-primary py-3 text-sm font-bold text-primary-foreground"
-        >
-          Crear cuenta
-        </Link>
-        <Link
-          href="/login"
-          className="flex w-full items-center justify-center rounded-button border border-hairline-strong py-3 text-sm font-semibold text-ink"
-        >
-          Iniciar sesión
-        </Link>
-      </div>
+      <AuthCtaButtons className="mx-auto mt-5 max-w-[280px]" />
     </div>
   );
 }

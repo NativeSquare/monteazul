@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 import type { Id } from "@packages/backend/convex/_generated/dataModel";
@@ -14,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AuthCtaButtons } from "./auth-cta-buttons";
 
 /**
  * Shared favourites state for the whole public annuaire. A single subscription
@@ -119,19 +119,8 @@ function LoginInviteDialog({
             encontrarlos fácilmente la próxima vez.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="mt-2 flex-col gap-2 sm:flex-col">
-          <Link
-            href="/signup"
-            className="flex w-full items-center justify-center rounded-button bg-primary py-3 text-sm font-bold text-primary-foreground"
-          >
-            Crear cuenta
-          </Link>
-          <Link
-            href="/login"
-            className="flex w-full items-center justify-center rounded-button border border-hairline-strong py-3 text-sm font-semibold text-ink"
-          >
-            Iniciar sesión
-          </Link>
+        <DialogFooter className="mt-2 sm:flex-col">
+          <AuthCtaButtons className="w-full" />
         </DialogFooter>
       </DialogContent>
     </Dialog>
