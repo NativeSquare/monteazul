@@ -78,25 +78,23 @@ async function toPublicCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
 
 /**
  * Fetch the `publicado` Commerces matching an optional accent-insensitive
- * search query and/or category, then project and group them by category in the
- * canonical taxonomy order. Shared by the plain listing and the search query so
- * both apply the exact same `publicado`-only, internal-fields-stripped rules.
+ * search query and/or category, picking the narrowest index available:
  *
- * - With a search query: uses the `search_text` index over the normalised
- *   field (accent- and case-insensitive, matching name / category /
- *   sub-category / description words), filtered to `publicado` (+ category).
- * - Without: uses the category or estado index directly.
+ * - With a search query: the `search_text` index over the normalised field
+ *   (accent- and case-insensitive, matching name / category / sub-category /
+ *   description words), filtered to `publicado` (+ category when set).
+ * - Category only: the `by_category` index, filtered to `publicado`.
+ * - Neither: the `by_estado` index.
  */
-async function collectPublicSections(
+async function fetchPublished(
   ctx: QueryCtx,
   opts: { text?: string; category?: CommerceCategory },
-) {
+): Promise<Doc<"commerces">[]> {
   const normalized = normalizeForSearch(opts.text ?? "").trim();
   const category = opts.category ?? null;
 
-  let published: Doc<"commerces">[];
   if (normalized.length > 0) {
-    published = await ctx.db
+    return ctx.db
       .query("commerces")
       .withSearchIndex("search_text", (q) => {
         const search = q
@@ -105,33 +103,49 @@ async function collectPublicSections(
         return category ? search.eq("category", category) : search;
       })
       .collect();
-  } else if (category) {
-    published = await ctx.db
+  }
+  if (category) {
+    return ctx.db
       .query("commerces")
       .withIndex("by_category", (q) => q.eq("category", category))
       .filter((q) => q.eq(q.field("estado"), "publicado"))
       .collect();
-  } else {
-    published = await ctx.db
-      .query("commerces")
-      .withIndex("by_estado", (q) => q.eq("estado", "publicado"))
-      .collect();
   }
+  return ctx.db
+    .query("commerces")
+    .withIndex("by_estado", (q) => q.eq("estado", "publicado"))
+    .collect();
+}
 
+/**
+ * Project the given Commerces to their public shape and group them by category
+ * in the canonical taxonomy order, dropping empty categories. Shared by the
+ * plain listing and the search query so both expose the exact same
+ * internal-fields-stripped, canonically-ordered sections.
+ */
+async function groupByCategory(ctx: QueryCtx, docs: Doc<"commerces">[]) {
   const sections = [];
-  for (const cat of COMMERCE_CATEGORIES) {
-    const inCategory = published.filter((doc) => doc.category === cat);
+  for (const category of COMMERCE_CATEGORIES) {
+    const inCategory = docs.filter((doc) => doc.category === category);
     if (inCategory.length === 0) continue;
     const commercesInCategory = await Promise.all(
       inCategory.map((doc) => toPublicCommerce(ctx, doc)),
     );
     sections.push({
-      category: cat,
+      category,
       count: commercesInCategory.length,
       commerces: commercesInCategory,
     });
   }
   return sections;
+}
+
+/** Fetch + group the public sections for an optional query and/or category. */
+async function collectPublicSections(
+  ctx: QueryCtx,
+  opts: { text?: string; category?: CommerceCategory },
+) {
+  return groupByCategory(ctx, await fetchPublished(ctx, opts));
 }
 
 /**
