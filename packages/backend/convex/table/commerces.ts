@@ -63,14 +63,24 @@ export const commerces = defineTable(documentSchema)
   });
 
 /**
+ * Resolve a Commerce's ordered storage photo ids to their public URLs, dropping
+ * any that no longer resolve. Shared by every Commerce projection.
+ */
+async function resolvePhotoUrls(
+  ctx: QueryCtx,
+  ids: Doc<"commerces">["photos"],
+): Promise<string[]> {
+  const urls = await Promise.all(ids.map((id) => ctx.storage.getUrl(id)));
+  return urls.filter((url): url is string => url !== null);
+}
+
+/**
  * Public projection of a Commerce — strips every internal, admin-only field.
  * Exported so other public surfaces (e.g. « Mis guardados » in `favorites`)
  * expose the exact same internal-fields-stripped shape.
  */
 export async function toPublicCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
-  const photos = (
-    await Promise.all(doc.photos.map((id) => ctx.storage.getUrl(id)))
-  ).filter((url): url is string => url !== null);
+  const photos = await resolvePhotoUrls(ctx, doc.photos);
 
   return {
     _id: doc._id,
@@ -211,9 +221,7 @@ export const getPublicById = query({
  * Only ever returned to the owner (see `myCommerce`), never to the public.
  */
 export async function toOwnerCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
-  const photos = (
-    await Promise.all(doc.photos.map((id) => ctx.storage.getUrl(id)))
-  ).filter((url): url is string => url !== null);
+  const photos = await resolvePhotoUrls(ctx, doc.photos);
 
   return {
     _id: doc._id,
