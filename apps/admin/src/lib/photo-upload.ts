@@ -1,5 +1,3 @@
-import { MAX_PHOTO_BYTES } from "@packages/backend/convex/lib/photos";
-
 /**
  * Client-side photo optimisation for the « Mi negocio » vitrine. The directory
  * is consumed on mobile, so before uploading we downscale to a sensible longest
@@ -13,9 +11,6 @@ export const PHOTO_MAX_DIMENSION = 1600;
 
 /** JPEG quality of the re-encoded photo (0–1). */
 const OUTPUT_QUALITY = 0.82;
-
-/** Re-export so the UI can display the shared cap without a second constant. */
-export { MAX_PHOTO_BYTES };
 
 /**
  * Downscale + re-encode an image File to an optimised JPEG Blob. Falls back to
