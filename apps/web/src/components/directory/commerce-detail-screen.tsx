@@ -20,6 +20,7 @@ import {
 import { PhotoCarousel } from "./photo-carousel";
 import { StatusBadge } from "./status-badge";
 import { SubcategoryPill } from "./subcategory-pill";
+import { useRecordVisit } from "./use-record-visit";
 import { useWhatsAppContact } from "./use-whatsapp-contact";
 import { WhatsAppGlyph } from "./whatsapp-button";
 
@@ -40,13 +41,20 @@ const SCREEN = "mx-auto min-h-screen max-w-[480px] bg-surface";
  * Fetches a single fiche by id from `getPublicById`, which only ever returns a
  * `publicado` Commerce with the internal fields (`resides`, `notas`, …) already
  * stripped: a `pendiente`/`suspendido` fiche or an unknown id yields `null`,
- * rendering the "no encontrado" state. The WhatsApp CTA records a Contact
- * WhatsApp Événement on click and stays a real `wa.me` anchor, so the redirect
- * happens through the browser even if tracking fails (contact prime sur la stat).
+ * rendering the "no encontrado" state. Opening a real fiche records a Visite
+ * (deduplicated per visitor / fiche / Bogota day, owner excluded — ADR-0001).
+ * The WhatsApp CTA records a Contact WhatsApp Événement on click and stays a
+ * real `wa.me` anchor, so the redirect happens through the browser even if
+ * tracking fails (contact prime sur la stat).
  */
 export function CommerceDetailScreen({ id }: { id: string }) {
   const router = useRouter();
   const commerce = useQuery(api.table.commerces.getPublicById, { id });
+
+  // Record a Visite once the fiche resolves to a real publicado Commerce. The
+  // server dedups to one Visite per (visitor, fiche, Bogota day) and excludes
+  // the Entrepreneur on their own fiche (ADR-0001).
+  useRecordVisit(commerce ? commerce._id : null);
 
   // Recompute the opening badge every minute so "Abierto/Cerrado" stays live.
   const [now, setNow] = React.useState(() => new Date());
