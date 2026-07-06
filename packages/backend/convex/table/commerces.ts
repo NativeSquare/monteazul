@@ -171,3 +171,23 @@ export const searchPublic = query({
   handler: (ctx, args) =>
     collectPublicSections(ctx, { text: args.text, category: args.category }),
 });
+
+/**
+ * Public detail of a single Commerce, backing the fiche screen. Returns the
+ * internal-fields-stripped projection ONLY when the fiche is `publicado`; a
+ * `pendiente`/`suspendido` fiche, an unknown id, or a malformed id string all
+ * return `null` so the web app renders its "no encontrado" page. Accepts a raw
+ * string id (the URL param) and normalises it, so a deep link with garbage in
+ * the path degrades gracefully instead of throwing. Never leaks the internal
+ * fields (`resides`, `notas`, `estado`, `ownerId`).
+ */
+export const getPublicById = query({
+  args: { id: v.string() },
+  handler: async (ctx, args) => {
+    const id = ctx.db.normalizeId("commerces", args.id);
+    if (!id) return null;
+    const doc = await ctx.db.get(id);
+    if (!doc || doc.estado !== "publicado") return null;
+    return toPublicCommerce(ctx, doc);
+  },
+});
