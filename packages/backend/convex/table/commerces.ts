@@ -1,19 +1,27 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import {
+  COMIDA_CATEGORY,
+  COMIDA_SUBCATEGORIES,
   COMMERCE_CATEGORIES,
   type CommerceCategory,
 } from "@packages/shared/categories";
 import { defineTable } from "convex/server";
-import { v } from "convex/values";
-import { query } from "../_generated/server";
+import { ConvexError, v } from "convex/values";
+import { mutation, query } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import {
+  RESIDES_VALUES,
+  type ResidesValue,
+  assertValidCommerce,
   categoryValidator,
+  commerceSearchText,
   estadoValidator,
   horarioValidator,
   normalizeForSearch,
   residesValidator,
 } from "../lib/commerce";
+import { requireAuthenticated } from "../rbac";
 
 /**
  * Commerce — the central entity of the directory (see CONTEXT.md). Always owned
@@ -55,14 +63,24 @@ export const commerces = defineTable(documentSchema)
   });
 
 /**
+ * Resolve a Commerce's ordered storage photo ids to their public URLs, dropping
+ * any that no longer resolve. Shared by every Commerce projection.
+ */
+async function resolvePhotoUrls(
+  ctx: QueryCtx,
+  ids: Doc<"commerces">["photos"],
+): Promise<string[]> {
+  const urls = await Promise.all(ids.map((id) => ctx.storage.getUrl(id)));
+  return urls.filter((url): url is string => url !== null);
+}
+
+/**
  * Public projection of a Commerce — strips every internal, admin-only field.
  * Exported so other public surfaces (e.g. « Mis guardados » in `favorites`)
  * expose the exact same internal-fields-stripped shape.
  */
 export async function toPublicCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
-  const photos = (
-    await Promise.all(doc.photos.map((id) => ctx.storage.getUrl(id)))
-  ).filter((url): url is string => url !== null);
+  const photos = await resolvePhotoUrls(ctx, doc.photos);
 
   return {
     _id: doc._id,
@@ -193,5 +211,167 @@ export const getPublicById = query({
     const doc = await ctx.db.get(id);
     if (!doc || doc.estado !== "publicado") return null;
     return toPublicCommerce(ctx, doc);
+  },
+});
+
+/**
+ * Owner projection of a Commerce — the fiche as its Entrepreneur sees it in
+ * « Mi negocio », including the `estado` (e.g. `pendiente` = pending approval)
+ * and the internal fields the owner themselves submitted (`resides`, `notas`).
+ * Only ever returned to the owner (see `myCommerce`), never to the public.
+ */
+export async function toOwnerCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
+  const photos = await resolvePhotoUrls(ctx, doc.photos);
+
+  return {
+    _id: doc._id,
+    _creationTime: doc._creationTime,
+    name: doc.name,
+    category: doc.category,
+    subcategories: doc.subcategories,
+    description: doc.description,
+    whatsapp: doc.whatsapp,
+    photos,
+    horario: doc.horario,
+    torreApto: doc.torreApto,
+    instagram: doc.instagram,
+    contactName: doc.contactName,
+    resides: doc.resides,
+    notas: doc.notas,
+    estado: doc.estado,
+  };
+}
+
+/**
+ * The « Mi negocio » query: the caller's own fiche (with its `estado`) or
+ * `null`. Scoped to the caller through the `by_owner` index, so it is an
+ * ownership guard by construction — a caller can only ever obtain their own
+ * fiche, never another account's, and an anonymous caller gets `null`.
+ */
+export const myCommerce = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return null;
+    const doc = await ctx.db
+      .query("commerces")
+      .withIndex("by_owner", (q) => q.eq("ownerId", userId))
+      .first();
+    if (!doc) return null;
+    return toOwnerCommerce(ctx, doc);
+  },
+});
+
+/**
+ * Taxonomy + enum values backing the entrepreneur fiche form. Surfaced from the
+ * shared constants (`@packages/shared`) and the domain enums so the back-office
+ * form builds its selects from the single source of truth, without duplicating
+ * the Spanish labels client-side.
+ */
+export const getFormOptions = query({
+  args: {},
+  handler: () => ({
+    categories: COMMERCE_CATEGORIES,
+    comidaCategory: COMIDA_CATEGORY,
+    comidaSubcategories: COMIDA_SUBCATEGORIES,
+    residesValues: RESIDES_VALUES,
+  }),
+});
+
+/**
+ * Submit the caller's fiche (back-office entrepreneur onboarding).
+ *
+ * Creates the Commerce in `pendiente` (invisible to the public until a Super
+ * admin approves it) and grants the `entreprise` role to the account at
+ * submission — approval only publishes (see CONTEXT.md). Enforces the 1:1 rule
+ * (one account owns exactly one Commerce: a second submission is refused) and
+ * the business-rule validation (WhatsApp exactly 10 digits, sub-categories only
+ * for « Comida y bebida », ¿Resides? among the three values), surfacing a
+ * Spanish `ConvexError` message the form renders inline.
+ *
+ * `category` and `resides` are accepted as plain strings and validated here (so
+ * the back-office passes the form values as-is); once validated they match the
+ * strict schema validators on insert.
+ */
+export const submitCommerce = mutation({
+  args: {
+    name: v.string(),
+    category: v.string(),
+    subcategories: v.optional(v.array(v.string())),
+    description: v.string(),
+    whatsapp: v.string(),
+    horario: horarioValidator,
+    torreApto: v.optional(v.string()),
+    instagram: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    resides: v.string(),
+    notas: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { userId, user } = await requireAuthenticated(ctx);
+
+    // 1:1 strict — an account owns exactly one Commerce.
+    const existing = await ctx.db
+      .query("commerces")
+      .withIndex("by_owner", (q) => q.eq("ownerId", userId))
+      .first();
+    if (existing) {
+      throw new ConvexError({
+        message:
+          "Ya tienes un negocio registrado. Cada cuenta gestiona un solo negocio.",
+      });
+    }
+
+    // Business rules a schema validator cannot express — surfaced in Spanish.
+    try {
+      assertValidCommerce({
+        category: args.category,
+        subcategories: args.subcategories,
+        whatsapp: args.whatsapp,
+      });
+      if (!RESIDES_VALUES.includes(args.resides as ResidesValue)) {
+        throw new Error("El valor de ¿Resides en Monteazul? no es válido.");
+      }
+    } catch (error) {
+      throw new ConvexError({
+        message: error instanceof Error ? error.message : "Datos inválidos.",
+      });
+    }
+
+    const subcategories =
+      args.subcategories && args.subcategories.length > 0
+        ? args.subcategories
+        : undefined;
+
+    const commerceId = await ctx.db.insert("commerces", {
+      name: args.name,
+      category: args.category as CommerceCategory,
+      subcategories,
+      description: args.description,
+      whatsapp: args.whatsapp,
+      photos: [],
+      horario: args.horario,
+      torreApto: args.torreApto,
+      instagram: args.instagram,
+      contactName: args.contactName,
+      searchText: commerceSearchText({
+        name: args.name,
+        category: args.category,
+        subcategories,
+        description: args.description,
+      }),
+      resides: args.resides as ResidesValue,
+      notas: args.notas,
+      estado: "pendiente",
+      ownerId: userId,
+    });
+
+    // Grant the `entreprise` role at submission. Never downgrade a Super admin
+    // who happens to submit a fiche.
+    if (user.role !== "admin") {
+      await ctx.db.patch(userId, { role: "entreprise" });
+    }
+
+    return commerceId;
   },
 });
