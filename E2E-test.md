@@ -84,3 +84,9 @@ Format par entrée :
 - [ ] **Édition sans repasser en approbation** : connecté comme entrepreneur d'une fiche `publicado`, dans « Mi negocio » modifier le nom et enregistrer → toast « Cambios guardados », l'estado reste « Publicado », et le nouveau nom apparaît aussitôt sur l'annuaire public.
 - [ ] **Suspension / réactivation** : sur une fiche `publicado`, cliquer « Suspender mi publicación » → l'état passe à « Suspendido » et la fiche disparaît de l'annuaire public ; cliquer « Reactivar mi publicación » → elle repasse « Publicado » et réapparaît, sans intervention admin.
 - [ ] **Garde propriétaire** : connecté comme un autre entrepreneur, tenter d'éditer/suspendre la fiche d'autrui (via son id) → refus, la fiche reste inchangée.
+
+## #14 — Statistiques entrepreneur (totaux et séries temporelles)
+
+- [ ] **Totaux visibles** : précondition — un Entrepreneur avec une fiche publiée ayant reçu des visites et des clics WhatsApp. Action — se connecter au back-office, ouvrir « Estadísticas ». Résultat observable — les cartes « Visitas » et « Contactos por WhatsApp » affichent les totaux corrects (agrégés depuis le journal, pas de compteur).
+- [ ] **Sélecteur de période** : précondition — même fiche avec des événements répartis sur plusieurs jours/semaines. Action — cliquer successivement Día / Semana / Mes. Résultat observable — le graphique d'évolution se re-bucketise (jour → semaine → mois) sans changer les totaux.
+- [ ] **Garde d'accès** : précondition — deux Entrepreneurs A et B, chacun sa fiche. Action — A tente d'accéder aux stats de la fiche de B (query `statsForCommerce` avec le `commerceId` de B). Résultat observable — accès refusé ; A ne voit que ses propres statistiques.
