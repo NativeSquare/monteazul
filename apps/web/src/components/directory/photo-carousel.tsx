@@ -36,14 +36,14 @@ export function PhotoCarousel({
     <div className="relative">
       <div
         onScroll={handleScroll}
-        className="flex h-[300px] snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
+        className="flex h-[300px] snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] lg:h-[440px]"
       >
         {slides.map((photo, index) => (
           <div
             key={photo ?? "placeholder"}
             data-testid="carousel-slide"
             data-placeholder={photo === null}
-            className="relative flex h-[300px] w-full flex-none snap-center items-center justify-center overflow-hidden"
+            className="relative flex h-[300px] w-full flex-none snap-center items-center justify-center overflow-hidden lg:h-[440px]"
             style={
               photo === null
                 ? { background: PHOTO_PLACEHOLDER_GRADIENT }
@@ -55,7 +55,7 @@ export function PhotoCarousel({
                 src={photo}
                 alt={`${name} — foto ${index + 1}`}
                 fill
-                sizes="480px"
+                sizes="(min-width: 1024px) 512px, 480px"
                 className="object-cover"
                 priority={index === 0}
               />

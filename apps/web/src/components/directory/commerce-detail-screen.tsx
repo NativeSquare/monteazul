@@ -30,7 +30,7 @@ type DetailCommerce = NonNullable<
   FunctionReturnType<typeof api.table.commerces.getPublicById>
 >;
 
-const SCREEN = "mx-auto min-h-screen max-w-[480px] bg-surface";
+const SCREEN = "mx-auto min-h-screen max-w-[480px] bg-surface lg:max-w-5xl";
 
 /**
  * Public Commerce detail screen, faithful to the Claude Design prototype:
@@ -98,110 +98,119 @@ function DetailContent({
   const contactWhatsApp = useWhatsAppContact();
 
   return (
-    <div className={`${SCREEN} pb-24`}>
-      <div className="relative">
-        <PhotoCarousel name={commerce.name} photos={commerce.photos} />
+    <div className="mx-auto min-h-screen max-w-[480px] bg-surface pb-24 lg:max-w-5xl lg:pb-12">
+      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-9 lg:px-8 lg:pt-8">
+        {/* Photos — full-bleed on mobile; sticky left column on desktop. */}
+        <div className="relative lg:sticky lg:top-8 lg:overflow-hidden lg:rounded-card">
+          <PhotoCarousel name={commerce.name} photos={commerce.photos} />
 
-        <button
-          type="button"
-          aria-label="Volver"
-          onClick={onBack}
-          className="absolute left-4 top-4 flex size-[38px] items-center justify-center rounded-full bg-white/95 text-ink shadow-[0_2px_8px_rgba(20,30,50,0.18)]"
-        >
-          <ChevronLeft className="size-5" strokeWidth={2.4} />
-        </button>
+          <button
+            type="button"
+            aria-label="Volver"
+            onClick={onBack}
+            className="absolute left-4 top-4 flex size-[38px] items-center justify-center rounded-full bg-white/95 text-ink shadow-[0_2px_8px_rgba(20,30,50,0.18)]"
+          >
+            <ChevronLeft className="size-5" strokeWidth={2.4} />
+          </button>
 
-        <FavoriteHeart
-          commerceId={commerce._id}
-          variant="detail"
-          className="absolute right-4 top-4 shadow-[0_2px_8px_rgba(20,30,50,0.18)]"
-        />
-      </div>
-
-      <div className="px-5 pt-5">
-        <div className="mb-3 flex items-center gap-2">
-          <SubcategoryPill>{secondary}</SubcategoryPill>
-          {status ? (
-            <StatusBadge status={status.state} label={status.short} />
-          ) : null}
+          <FavoriteHeart
+            commerceId={commerce._id}
+            variant="detail"
+            className="absolute right-4 top-4 shadow-[0_2px_8px_rgba(20,30,50,0.18)]"
+          />
         </div>
 
-        <h1 className="text-[26px] font-bold tracking-[-0.02em] text-ink">
-          {commerce.name}
-        </h1>
-
-        {commerce.torreApto ? (
-          <div className="mt-2 flex items-center gap-1.5 text-[13px] text-ink-muted">
-            <MapPin
-              className="size-[15px] shrink-0 text-ink-faint"
-              strokeWidth={2}
-            />
-            {commerce.torreApto}
-          </div>
-        ) : null}
-
-        <p className="mt-[18px] text-[15px] leading-[1.6] text-ink-soft">
-          {commerce.description}
-        </p>
-
-        {horarioLines && status ? (
-          <div className="mt-6 rounded-card border border-hairline p-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-ink">
-              <Clock className="size-[17px] text-primary" strokeWidth={2} />
-              Horario
-            </div>
-            <div className="mt-[11px] flex items-center justify-between">
-              <span className="text-sm text-ink-muted">{horarioLines.days}</span>
-              <span className="text-sm font-semibold text-ink">
-                {horarioLines.hours}
-              </span>
-            </div>
-            <div className="mt-[9px] text-[12.5px] font-medium text-ink-muted">
-              {status.text}
-            </div>
-          </div>
-        ) : null}
-
-        <div className="mt-5">
-          <div className="mb-[11px] text-sm font-bold text-ink">
-            Redes y contacto
-          </div>
-          <div className="flex flex-wrap gap-2.5">
-            {ig ? (
-              <a
-                href={ig.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-[11px] border border-hairline-strong px-3.5 py-2.5 text-ink"
-              >
-                <Instagram
-                  className="size-[18px] text-primary"
-                  strokeWidth={2}
-                />
-                <span className="text-[13px] font-semibold">{ig.handle}</span>
-              </a>
+        {/* Info — below the photos on mobile; right column on desktop. */}
+        <div className="px-5 pt-5 lg:px-0 lg:pt-0">
+          <div className="mb-3 flex items-center gap-2">
+            <SubcategoryPill>{secondary}</SubcategoryPill>
+            {status ? (
+              <StatusBadge status={status.state} label={status.short} />
             ) : null}
-            <div className="flex items-center gap-2 rounded-[11px] border border-hairline-strong px-3.5 py-2.5 text-ink">
-              <Phone className="size-[18px] text-primary" strokeWidth={2} />
-              <span className="text-[13px] font-semibold">{phone}</span>
+          </div>
+
+          <h1 className="text-[26px] font-bold tracking-[-0.02em] text-ink lg:text-[30px]">
+            {commerce.name}
+          </h1>
+
+          {commerce.torreApto ? (
+            <div className="mt-2 flex items-center gap-1.5 text-[13px] text-ink-muted">
+              <MapPin
+                className="size-[15px] shrink-0 text-ink-faint"
+                strokeWidth={2}
+              />
+              {commerce.torreApto}
+            </div>
+          ) : null}
+
+          <p className="mt-[18px] text-[15px] leading-[1.6] text-ink-soft">
+            {commerce.description}
+          </p>
+
+          {horarioLines && status ? (
+            <div className="mt-6 rounded-card border border-hairline p-4">
+              <div className="flex items-center gap-2 text-sm font-bold text-ink">
+                <Clock className="size-[17px] text-primary" strokeWidth={2} />
+                Horario
+              </div>
+              <div className="mt-[11px] flex items-center justify-between">
+                <span className="text-sm text-ink-muted">
+                  {horarioLines.days}
+                </span>
+                <span className="text-sm font-semibold text-ink">
+                  {horarioLines.hours}
+                </span>
+              </div>
+              <div className="mt-[9px] text-[12.5px] font-medium text-ink-muted">
+                {status.text}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="mt-5">
+            <div className="mb-[11px] text-sm font-bold text-ink">
+              Redes y contacto
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {ig ? (
+                <a
+                  href={ig.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-[11px] border border-hairline-strong px-3.5 py-2.5 text-ink"
+                >
+                  <Instagram
+                    className="size-[18px] text-primary"
+                    strokeWidth={2}
+                  />
+                  <span className="text-[13px] font-semibold">{ig.handle}</span>
+                </a>
+              ) : null}
+              <div className="flex items-center gap-2 rounded-[11px] border border-hairline-strong px-3.5 py-2.5 text-ink">
+                <Phone className="size-[18px] text-primary" strokeWidth={2} />
+                <span className="text-[13px] font-semibold">{phone}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t border-hairline bg-surface px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
-        <a
-          href={waHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() =>
-            contactWhatsApp({ commerceId: commerce._id, name: commerce.name })
-          }
-          className="flex w-full items-center justify-center gap-2.5 rounded-[13px] bg-whatsapp py-[15px] text-[15px] font-bold text-whatsapp-foreground"
-        >
-          <WhatsAppGlyph className="size-5" />
-          Escribir por WhatsApp
-        </a>
+          {/* WhatsApp CTA — a sticky bottom bar on mobile, an inline block at the
+              end of the info column on desktop. A single anchor either way (the
+              detail test asserts exactly one « Escribir por WhatsApp » link). */}
+          <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t border-hairline bg-surface px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 lg:static lg:mt-8 lg:max-w-none lg:border-0 lg:bg-transparent lg:p-0">
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                contactWhatsApp({ commerceId: commerce._id, name: commerce.name })
+              }
+              className="flex w-full items-center justify-center gap-2.5 rounded-[13px] bg-whatsapp py-[15px] text-[15px] font-bold text-whatsapp-foreground"
+            >
+              <WhatsAppGlyph className="size-5" />
+              Escribir por WhatsApp
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
