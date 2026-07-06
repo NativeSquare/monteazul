@@ -56,7 +56,7 @@ const commerce: DirectoryCommerce = {
 type ClickArgs = { commerceId: string; visitorId: string };
 
 function renderCard(
-  mutationImpl: (args: ClickArgs) => unknown = () => null,
+  mutationImpl: (args: ClickArgs) => void = () => {},
 ): { recorded: ClickArgs[] } {
   const recorded: ClickArgs[] = [];
   const client = new ConvexReactClientFake();
@@ -64,7 +64,8 @@ function renderCard(
     api.table.events.recordWhatsAppClick,
     (args) => {
       recorded.push(args as ClickArgs);
-      return mutationImpl(args as ClickArgs);
+      mutationImpl(args as ClickArgs);
+      return null;
     },
   );
   renderWithConvex(<CommerceCard commerce={commerce} now={new Date()} />, {
