@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { commerceSearchText } from "./lib/commerce";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.*s");
@@ -35,6 +36,12 @@ async function insertCommerce(
       category: seed.category,
       subcategories: seed.subcategories,
       description,
+      searchText: commerceSearchText({
+        name: seed.name,
+        category: seed.category,
+        subcategories: seed.subcategories,
+        description,
+      }),
       whatsapp: "3001234567",
       photos: [],
       horario: { mode: "plages", days: "Lun – Vie", from: 540, to: 1080 },
