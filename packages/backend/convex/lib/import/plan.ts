@@ -202,31 +202,30 @@ export function buildImportPlan(
   const fiches: NormalizedFiche[] = [];
   for (const row of rows) {
     const { line } = row;
-    const name = (row.values["Nombre del negocio"] ?? "").trim();
-    const correo = (row.values.Correo ?? "").trim().toLowerCase();
+    // Read a cell by its (trimmed) header name, already trimmed.
+    const cell = (header: string) => (row.values[header] ?? "").trim();
+
+    const name = cell("Nombre del negocio");
+    const correo = cell("Correo").toLowerCase();
 
     if (correo === "") {
       report.rowsWithoutCorreo.push({ line, name });
       continue;
     }
 
-    const category = (row.values["Categoría"] ?? "").trim();
+    const category = cell("Categoría");
     if (!COMMERCE_CATEGORIES.includes(category as never)) {
       report.unknownCategory.push({ line, correo, raw: category });
       continue;
     }
 
-    const whatsapp = normalizeWhatsapp(row.values.WhatsApp ?? "");
+    const whatsapp = normalizeWhatsapp(cell("WhatsApp"));
     if (whatsapp === null) {
-      report.invalidWhatsapp.push({
-        line,
-        correo,
-        raw: (row.values.WhatsApp ?? "").trim(),
-      });
+      report.invalidWhatsapp.push({ line, correo, raw: cell("WhatsApp") });
       continue;
     }
 
-    const resides = (row.values["¿Resides en Monteazul?"] ?? "").trim();
+    const resides = cell("¿Resides en Monteazul?");
     if (!RESIDES_VALUES.includes(resides as ResidesValue)) {
       report.invalidResides.push({ line, correo, raw: resides });
       continue;
@@ -234,45 +233,34 @@ export function buildImportPlan(
 
     const { subcategories, droppedOutsideComida } = normalizeSubcategories(
       category,
-      row.values["Subcategoría"] ?? "",
+      cell("Subcategoría"),
     );
     if (droppedOutsideComida) {
       report.droppedSubcategories.push({ line, correo });
     }
 
-    const { horario, unmapped } = mapHorario(
-      row.values.Horario ?? "",
-      horarioTable,
-    );
+    const { horario, unmapped } = mapHorario(cell("Horario"), horarioTable);
     if (unmapped) {
-      report.unmappedHorario.push({
-        line,
-        correo,
-        raw: (row.values.Horario ?? "").trim(),
-      });
+      report.unmappedHorario.push({ line, correo, raw: cell("Horario") });
     }
 
-    const { estado, mapped } = mapEstado(row.values.Estado ?? "");
+    const { estado, mapped } = mapEstado(cell("Estado"));
     if (!mapped) {
-      report.unmappedEstado.push({
-        line,
-        correo,
-        raw: (row.values.Estado ?? "").trim(),
-      });
+      report.unmappedEstado.push({ line, correo, raw: cell("Estado") });
     }
 
     const form: CommerceFormInput = {
       name,
       category,
       subcategories,
-      description: (row.values["Descripción"] ?? "").trim(),
+      description: cell("Descripción"),
       whatsapp,
       horario,
-      torreApto: optional(row.values["Torre y apartamento"]),
-      instagram: optional(row.values["Instagram / redes"]),
-      contactName: optional(row.values["Nombre de contacto"]),
+      torreApto: optional(cell("Torre y apartamento")),
+      instagram: optional(cell("Instagram / redes")),
+      contactName: optional(cell("Nombre de contacto")),
       resides,
-      notas: optional(row.values.Notas),
+      notas: optional(cell("Notas")),
     };
 
     fiches.push({
@@ -280,7 +268,7 @@ export function buildImportPlan(
       correo,
       estado,
       form,
-      photoFilenames: parsePhotoFilenames(row.values.Fotos ?? ""),
+      photoFilenames: parsePhotoFilenames(cell("Fotos")),
     });
   }
 
