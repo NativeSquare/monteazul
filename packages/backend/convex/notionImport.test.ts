@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import fixtureCsv from "./lib/import/fixtures/notion-export.fixture.csv?raw";
@@ -9,6 +9,11 @@ import schema from "./schema";
 
 // Provide glob explicitly so convex-test can locate _generated/ and all modules.
 const modules = import.meta.glob("./**/*.*s");
+
+// Seeding several accounts per import runs Scrypt password hashing (deliberately
+// slow) five times per run — well over the 5s default on a slow CI runner. Give
+// this file a generous per-test budget; the assertions themselves are instant.
+vi.setConfig({ testTimeout: 30000 });
 
 /** Store a 1 KB image blob and return its storage id. */
 async function storeImage(
