@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Clock, Heart } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@packages/backend/convex/_generated/api";
 import { commerceStatus } from "@packages/backend/convex/lib/horario";
 
+import { PHOTO_PLACEHOLDER_GRADIENT } from "@/lib/commerce-media";
 import { StatusBadge } from "./status-badge";
 import { WhatsAppButton } from "./whatsapp-button";
 
@@ -15,15 +17,13 @@ type Sections = FunctionReturnType<
 export type DirectorySection = Sections[number];
 export type DirectoryCommerce = DirectorySection["commerces"][number];
 
-/** Placeholder gradient used when a Commerce has no photo yet (matches the prototype). */
-const PLACEHOLDER_GRADIENT = "linear-gradient(135deg,#eef1f6,#e1e8f1)";
-
 /**
  * Commerce card of the directory list, faithful to the Claude Design prototype:
  * photo (or placeholder) with a real-time opening badge, name, sub-category,
- * horario status line, and a WhatsApp CTA. The favourite heart and the WhatsApp
- * button are present but INERT in this slice — contact tracking and favourites
- * are wired in later slices.
+ * horario status line, and a WhatsApp CTA. The whole card links to the public
+ * detail page (`/negocio/<id>`). The favourite heart and the WhatsApp button
+ * are present but INERT in this slice — they only stop the card navigation;
+ * contact tracking and favourites are wired in later slices.
  */
 function CommerceCard({
   commerce,
@@ -39,13 +39,15 @@ function CommerceCard({
   const photo = commerce.photos[0];
 
   return (
-    <div
+    <Link
+      href={`/negocio/${commerce._id}`}
+      aria-label={commerce.name}
       data-slot="commerce-card"
-      className="w-[204px] shrink-0 snap-start"
+      className="block w-[204px] shrink-0 snap-start"
     >
       <div
         className="relative flex h-[132px] items-end overflow-hidden rounded-card p-2.5"
-        style={photo ? undefined : { background: PLACEHOLDER_GRADIENT }}
+        style={photo ? undefined : { background: PHOTO_PLACEHOLDER_GRADIENT }}
       >
         {photo ? (
           <Image
@@ -70,6 +72,7 @@ function CommerceCard({
           type="button"
           aria-label="Guardar en favoritos"
           data-slot="favorite-button"
+          onClick={(event) => event.preventDefault()}
           className="absolute right-2 top-2 flex size-[30px] items-center justify-center rounded-full bg-white/95 text-ink-soft"
         >
           <Heart className="size-4" strokeWidth={2} />
@@ -88,10 +91,11 @@ function CommerceCard({
         <WhatsAppButton
           size="sm"
           aria-label={`Escribir por WhatsApp a ${commerce.name}`}
+          onClick={(event) => event.preventDefault()}
           className="mt-2.5 h-9 w-full rounded-[9px] text-[12.5px]"
         />
       </div>
-    </div>
+    </Link>
   );
 }
 
