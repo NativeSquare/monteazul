@@ -102,3 +102,9 @@ Format par entrée :
 - [ ] **Création + connexion** : connecté en `admin`, ouvrir `/negocios/nueva`, remplir email `nuevo.comercio@example.com` + fiche valide (WhatsApp 10 chiffres), « Crear cuenta » → un mot de passe fort s'affiche **une fois** ; se déconnecter et se connecter avec cet email + ce mot de passe → accès à l'espace entrepreneur, la fiche est **publicado** et visible sur l'annuaire.
 - [ ] **Aucun email** : créer un compte seedé et vérifier qu'**aucun email** n'est envoyé/programmé (pas d'OTP de vérification, pas de mail de bienvenue) ; le commerçant peut néanmoins réinitialiser via « Olvidé mi contraseña ».
 - [ ] **Email déjà utilisé** : tenter de créer un compte avec un email déjà existant → message d'erreur clair, **aucune** cuenta/negocio partiels créés.
+
+## #17 — Script d'import Notion (CSV + photos, fixture mock uniquement)
+
+- [ ] **Import réussi depuis la fixture** — Précondition : base vide, fixture CSV + `horario-map.json` + 3 fichiers photo dans `./attachments`. Action : `node scripts/import-notion.mjs --csv fixture.csv --photos ./attachments --horario horario-map.json`. Résultat : 5 comptes `entreprise` créés, fiches rattachées 1:1, estados corrects (TecnoArreglos en `pendiente`, les 4 autres `publicado`), photos visibles dans l'ordre, `import-credentials.local.json` contient 5 mots de passe, **aucun email reçu**, et un compte peut se connecter avec le mot de passe généré.
+- [ ] **Doublon Correo → échec sans écriture** — Précondition : un CSV avec deux lignes partageant le même `Correo`. Action : lancer l'import (ou `--dry-run`). Résultat : le rapport liste le doublon, sortie en erreur, **zéro compte/fiche créé**.
+- [ ] **Ré-exécution idempotente** — Précondition : import déjà effectué (5 comptes). Action : relancer la même commande. Résultat : `created 0, skipped 5`, aucun doublon en base.
