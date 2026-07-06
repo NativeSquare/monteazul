@@ -1,0 +1,17 @@
+{
+  "name": "@packages/shared",
+  "version": "1.0.0",
+  "description": "Shared constants and utilities",
+  "main": "constants.js",
+  "exports": {
+    ".": "./constants.js",
+    "./constants": "./constants.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8"
+  }
+}
