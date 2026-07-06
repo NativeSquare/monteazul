@@ -4,16 +4,16 @@ import * as React from "react";
 
 import { CATEGORY_CHIPS, type CategoryKey } from "@/lib/categories";
 import { Button } from "@/components/ui/button";
-import { CategoryChip } from "@/components/directory/category-chip";
-import { CommerceCardSkeleton } from "@/components/directory/commerce-card-skeleton";
-import { SearchBar } from "@/components/directory/search-bar";
-import { StatusBadge } from "@/components/directory/status-badge";
-import { SubcategoryPill } from "@/components/directory/subcategory-pill";
-import { WhatsAppButton } from "@/components/directory/whatsapp-button";
 import {
+  CategoryChip,
+  CommerceCardSkeleton,
+  SearchBar,
+  StatusBadge,
+  SubcategoryPill,
   Toaster,
+  WhatsAppButton,
   notifyWhatsAppRedirect,
-} from "@/components/directory/whatsapp-toast";
+} from "@/components/directory";
 
 function Section({
   title,
