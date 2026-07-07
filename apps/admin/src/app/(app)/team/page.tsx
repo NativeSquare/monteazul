@@ -1,29 +1,9 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { AdminTable } from "@/components/app/dashboard/admin-table";
-import { PendingInvites } from "@/components/app/dashboard/pending-invites";
-import { InviteDialog } from "@/components/app/dashboard/invite-dialog";
-
+// The "Team" admin-management flow (invite/manage other admins) is disabled for
+// the MVP — new admins are seeded manually in the DB. The route is kept as a
+// redirect so any old link lands somewhere sensible. To bring it back, restore
+// the previous version from git history and re-add the sidebar entry.
 export default function TeamPage() {
-  return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <div className="px-4 lg:px-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Team</h1>
-            <p className="text-muted-foreground text-sm">
-              Manage your admin team members here.
-            </p>
-          </div>
-          <InviteDialog />
-        </div>
-      </div>
-      <div className="px-4 lg:px-6">
-        <PendingInvites />
-      </div>
-      <div className="px-4 lg:px-6">
-        <AdminTable />
-      </div>
-    </div>
-  );
+  redirect("/negocios");
 }

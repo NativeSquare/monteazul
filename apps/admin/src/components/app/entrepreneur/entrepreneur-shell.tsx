@@ -9,20 +9,13 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import {
   IconBuildingStore,
   IconChartBar,
-  IconChevronRight,
-  IconClipboardCheck,
   IconDotsVertical,
   IconInnerShadowTop,
+  IconLifebuoy,
   IconLogout,
-  IconUsersGroup,
 } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,64 +30,41 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiteHeader } from "@/components/site-header";
 
-// --- Types ---
+// --- Navigation data ---
 
 type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   href: string;
-  children?: NavItem[];
 };
 
-type NavGroup = {
-  title: string;
-  items: NavItem[];
-  defaultOpen?: boolean;
-};
-
-// --- Navigation data ---
-
-const navGroups: NavGroup[] = [
-  {
-    title: "Directorio",
-    defaultOpen: true,
-    items: [
-      { label: "Negocios", icon: IconBuildingStore, href: "/negocios" },
-      { label: "Aprobación", icon: IconClipboardCheck, href: "/aprobacion" },
-      { label: "Estadísticas", icon: IconChartBar, href: "/estadisticas" },
-    ],
-  },
-  {
-    title: "General",
-    defaultOpen: true,
-    items: [
-      { label: "Users", icon: IconUsersGroup, href: "/users" },
-      // "Team" (admin management) is disabled for the MVP — new admins are
-      // seeded manually in the DB. Re-add here to bring the flow back.
-    ],
-  },
+const navItems: NavItem[] = [
+  { label: "Mi negocio", icon: IconBuildingStore, href: "/mi-negocio" },
+  { label: "Estadísticas", icon: IconChartBar, href: "/mi-negocio/estadisticas" },
 ];
+
+const HELP_ITEM: NavItem = {
+  label: "Ayuda",
+  icon: IconLifebuoy,
+  href: "/mi-negocio/ayuda",
+};
 
 // --- Helpers ---
 
 function getInitials(name: string): string {
-  if (!name) return "AD";
-  const parts = name.split(" ");
+  if (!name) return "MN";
+  const parts = name.trim().split(" ");
   if (parts.length >= 2) {
     return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
   }
@@ -115,48 +85,19 @@ const NavMenuItem = ({
   pathname: string;
 }) => {
   const Icon = item.icon;
-  const hasChildren = item.children && item.children.length > 0;
-  const active = isRouteActive(pathname, item.href);
-
-  if (!hasChildren) {
-    return (
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-          <Link href={item.href}>
-            <Icon className="size-4" />
-            <span>{item.label}</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    );
-  }
-
   return (
-    <Collapsible asChild defaultOpen={active} className="group/collapsible">
-      <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton isActive={active} tooltip={item.label}>
-            <Icon className="size-4" />
-            <span>{item.label}</span>
-            <IconChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {item.children?.map((child) => (
-              <SidebarMenuSubItem key={child.label}>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={isRouteActive(pathname, child.href)}
-                >
-                  <Link href={child.href}>{child.label}</Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={isRouteActive(pathname, item.href)}
+        tooltip={item.label}
+      >
+        <Link href={item.href}>
+          <Icon className="size-4" />
+          <span>{item.label}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 };
 
@@ -224,7 +165,7 @@ const NavUser = ({
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleLogout}>
               <IconLogout className="mr-2 size-4" />
-              Log out
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -233,15 +174,17 @@ const NavUser = ({
   );
 };
 
-const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
+const EntrepreneurSidebar = ({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) => {
   const pathname = usePathname();
-  const currentAdmin = useQuery(api.table.admin.currentAdmin);
+  const me = useQuery(api.table.users.currentUser);
 
-  const user = currentAdmin
+  const user = me
     ? {
-        name: currentAdmin.name || "Admin",
-        email: currentAdmin.email || "",
-        avatar: currentAdmin.image || "",
+        name: me.name || "Mi negocio",
+        email: me.email || "",
+        avatar: me.image || "",
       }
     : null;
 
@@ -250,16 +193,14 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild tooltip="Admin Panel">
-              <Link href="/negocios">
+            <SidebarMenuButton size="lg" asChild tooltip="Monteazul">
+              <Link href="/mi-negocio">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-primary">
                   <IconInnerShadowTop className="size-5 text-primary-foreground" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-medium">Admin Panel</span>
-                  <span className="text-xs text-muted-foreground">
-                    Management
-                  </span>
+                  <span className="font-medium">Monteazul</span>
+                  <span className="text-xs text-muted-foreground">Mi negocio</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -267,24 +208,21 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {navGroups.map((group) => (
-          <SidebarGroup key={group.title}>
-            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <NavMenuItem
-                    key={item.label}
-                    item={item}
-                    pathname={pathname}
-                  />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                <NavMenuItem key={item.href} item={item} pathname={pathname} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        {/* "Ayuda" sits at the very bottom of the sidebar, above the account. */}
+        <SidebarMenu>
+          <NavMenuItem item={HELP_ITEM} pathname={pathname} />
+        </SidebarMenu>
         {user ? (
           <NavUser user={user} />
         ) : (
@@ -304,11 +242,7 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
 
 // --- Main Shell ---
 
-interface ApplicationShellProps {
-  children: React.ReactNode;
-}
-
-export function ApplicationShell({ children }: ApplicationShellProps) {
+export function EntrepreneurShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider
       style={
@@ -318,11 +252,11 @@ export function ApplicationShell({ children }: ApplicationShellProps) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar />
+      <EntrepreneurSidebar />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-8">
             {children}
           </div>
         </div>

@@ -65,7 +65,7 @@ export function AccesoForm({ className, ...props }: React.ComponentProps<"div">)
         // Route by role: a Super admin who signs in here still lands on the
         // admin back-office (/team); everyone else goes to « Mi negocio ».
         const me = await convex.query(api.table.users.currentUser);
-        router.replace(me?.role === "admin" ? "/team" : "/mi-negocio");
+        router.replace(me?.role === "admin" ? "/negocios" : "/mi-negocio");
       } else {
         router.replace(`/verificar?email=${encodeURIComponent(data.email)}`);
       }
