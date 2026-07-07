@@ -224,11 +224,12 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
         </CardContent>
       </Card>
 
-      {/* Edit form — one <form>, sectioned into cards, single save action. */}
+      {/* Edit form — one <form>, sectioned into cards, single save action.
+          Cards on the same desktop row stretch to equal height (grid default). */}
       <form
         id="form-mi-negocio"
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid gap-6 lg:grid-cols-2 lg:items-start"
+        className="grid gap-6 lg:grid-cols-2"
       >
         {/* Información básica */}
         <Card>
