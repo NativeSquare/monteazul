@@ -114,8 +114,12 @@ export function DirectoryScreen() {
                 </span>
               </div>
               {/* Horizontal snap-scroll on mobile; a wrapping multi-column grid
-                  on desktop so the cards fill the wide layout. */}
-              <div className="flex snap-x gap-3.5 overflow-x-auto pb-1.5 pl-4 [scrollbar-width:none] lg:grid lg:grid-cols-2 lg:gap-x-5 lg:gap-y-6 lg:overflow-visible lg:px-8 xl:grid-cols-3 2xl:grid-cols-4">
+                  on desktop so the cards fill the wide layout. `pl-4` insets the
+                  first card; `mr-4` narrows the scroll viewport so a peeking
+                  card is cut 16px before the screen edge (symmetric with the
+                  left) and the last card keeps its gutter when scrolled. Both
+                  are dropped in the desktop grid, where lg:px-8 takes over. */}
+              <div className="mr-4 flex snap-x gap-3.5 overflow-x-auto pb-1.5 pl-4 [scrollbar-width:none] lg:mr-0 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:gap-y-6 lg:overflow-visible lg:px-8 xl:grid-cols-3 2xl:grid-cols-4">
                 {section.commerces.map((commerce) => (
                   <CommerceCard
                     key={commerce._id}
@@ -123,12 +127,6 @@ export function DirectoryScreen() {
                     now={now}
                   />
                 ))}
-                {/* Trailing gutter so the last card keeps its right padding once
-                    the row scrolls — a scroll container's own trailing padding
-                    is unreliable across browsers. The negative margin cancels
-                    the flex gap so the gutter is exactly 16px. Removed in the
-                    desktop grid. */}
-                <div aria-hidden className="-ml-3.5 w-4 shrink-0 lg:hidden" />
               </div>
             </section>
           ))
