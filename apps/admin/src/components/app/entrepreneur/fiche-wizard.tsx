@@ -149,11 +149,12 @@ export function FicheWizard() {
         </p>
       </div>
 
-      {/* One <form>, sectioned into cards, single submit action at the bottom. */}
+      {/* One <form>, sectioned into cards, single submit action at the bottom.
+          Cards on the same desktop row stretch to equal height (grid default). */}
       <form
         id="form-fiche"
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid gap-6 lg:grid-cols-2 lg:items-start"
+        className="grid gap-6 lg:grid-cols-2"
       >
         {/* Información básica */}
         <Card>
