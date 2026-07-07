@@ -252,6 +252,11 @@ function DayRow({
                 type="time"
                 aria-label="Apertura"
                 step={60}
+                // Chromium gives time inputs an incompressible intrinsic width
+                // (~99px) because of the picker icon, which overflows the page
+                // on narrow phones — hide it so the input can shrink. The field
+                // stays editable and mobile browsers open their native picker.
+                className="[&::-webkit-calendar-picker-indicator]:hidden"
                 value={minutesToTime(s.window.from)}
                 onChange={(e) => {
                   const m = timeToMinutes(e.target.value);
@@ -265,6 +270,7 @@ function DayRow({
                 type="time"
                 aria-label="Cierre"
                 step={60}
+                className="[&::-webkit-calendar-picker-indicator]:hidden"
                 value={minutesToTime(s.window.to)}
                 onChange={(e) => {
                   const m = timeToMinutes(e.target.value);
