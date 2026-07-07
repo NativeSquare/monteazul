@@ -30,7 +30,7 @@ export default function EntrepreneurLayout({
               Mi negocio
             </Link>
             <Link
-              href="/estadisticas"
+              href="/mi-negocio/estadisticas"
               className="text-muted-foreground hover:text-foreground text-sm font-medium"
             >
               Estadísticas
