@@ -73,17 +73,45 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 
+type Role = "user" | "entreprise" | "admin";
+
 type UserData = {
   _id: Id<"users">;
   _creationTime: number;
   name?: string;
   email?: string;
   image?: string;
-  role?: "user" | "entreprise" | "admin";
+  role?: Role;
   emailVerificationTime?: number;
   banned?: boolean;
   banExpires?: number;
 };
+
+type RoleView = "all" | Role;
+
+// Every account in the app is one of three roles. The Comercio (entreprise)
+// badge is the one that lets an admin spot a business owner at a glance.
+const ROLE_BADGE: Record<Role, { label: string; className: string }> = {
+  admin: {
+    label: "Administrador",
+    className: "border-purple-200 bg-purple-50 text-purple-700",
+  },
+  entreprise: {
+    label: "Comercio",
+    className: "border-blue-200 bg-blue-50 text-blue-700",
+  },
+  user: {
+    label: "Usuario",
+    className: "border-gray-200 bg-gray-50 text-gray-600",
+  },
+};
+
+const ROLE_FILTER_OPTIONS: { value: RoleView; label: string }[] = [
+  { value: "all", label: "Todos los roles" },
+  { value: "admin", label: "Administradores" },
+  { value: "entreprise", label: "Comercios" },
+  { value: "user", label: "Usuarios" },
+];
 
 function getInitials(name: string | undefined): string {
   if (!name) return "?";
@@ -120,7 +148,7 @@ function getAvatarColor(name: string | undefined): string {
 }
 
 function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString("en-US", {
+  return new Date(timestamp).toLocaleDateString("es-CO", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -128,13 +156,13 @@ function formatDate(timestamp: number): string {
 }
 
 interface UserTableProps {
-  /** Base path for user detail links (e.g. "/users" -> "/users/{id}"). Defaults to "/team" */
+  /** Base path for user detail links (e.g. "/users" -> "/users/{id}"). */
   basePath?: string;
-  /** Filter users by role. If set, only users with this role are shown */
-  roleFilter?: "user" | "admin";
+  /** Hard-scope to a single role (kept for compatibility). */
+  roleFilter?: Role;
 }
 
-export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
+export function UserTable({ basePath = "/users", roleFilter }: UserTableProps) {
   const router = useRouter();
   const {
     results: allUsers,
@@ -143,9 +171,18 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
     isLoading,
   } = usePaginatedQuery(api.table.admin.listUsers, {}, { initialNumItems: 50 });
 
-  const users = roleFilter
-    ? allUsers.filter((u) => (u.role ?? "user") === roleFilter)
-    : allUsers;
+  const [roleView, setRoleView] = React.useState<RoleView>("all");
+
+  // Show every account by default (usuarios, comercios and administradores).
+  // The dropdown narrows by role; the legacy `roleFilter` prop still hard-scopes
+  // if a caller sets it.
+  const users = React.useMemo(() => {
+    let list = allUsers;
+    if (roleFilter) list = list.filter((u) => (u.role ?? "user") === roleFilter);
+    if (roleView !== "all")
+      list = list.filter((u) => (u.role ?? "user") === roleView);
+    return list;
+  }, [allUsers, roleFilter, roleView]);
 
   const deleteUser = useMutation(api.table.admin.deleteUser);
   const updateUser = useMutation(api.table.admin.updateUser);
@@ -163,22 +200,24 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
     if (!userToDelete) return;
     try {
       await deleteUser({ userId: userToDelete });
-      toast.success("User deleted successfully");
+      toast.success("Usuario eliminado.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete user");
+      toast.error(error instanceof Error ? error.message : "No se pudo eliminar el usuario.");
     } finally {
       setDeleteDialogOpen(false);
       setUserToDelete(null);
     }
   };
 
-  const handleToggleRole = async (userId: Id<"users">, currentRole: "user" | "entreprise" | "admin" | undefined) => {
+  const handleToggleRole = async (userId: Id<"users">, currentRole: Role | undefined) => {
     const newRole = currentRole === "admin" ? "user" : "admin";
     try {
       await updateUser({ userId, updates: { role: newRole } });
-      toast.success(`User role updated to ${newRole}`);
+      toast.success(
+        newRole === "admin" ? "Usuario ascendido a administrador." : "Se quitó el rol de administrador.",
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update user");
+      toast.error(error instanceof Error ? error.message : "No se pudo actualizar el usuario.");
     }
   };
 
@@ -200,14 +239,14 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
       },
       {
         accessorKey: "name",
-        header: "Full name",
+        header: "Nombre",
         cell: ({ row }) => (
           <span className="font-medium">{row.original.name || "—"}</span>
         ),
       },
       {
         accessorKey: "email",
-        header: "Email",
+        header: "Correo",
         cell: ({ row }) => (
           <Link
             href={`mailto:${row.original.email}`}
@@ -220,16 +259,20 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
       },
       {
         accessorKey: "role",
-        header: "Role",
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {row.original.role === "admin" ? "Administrator" : "User"}
-          </span>
-        ),
+        header: "Rol",
+        cell: ({ row }) => {
+          const role = (row.original.role ?? "user") as Role;
+          const badge = ROLE_BADGE[role];
+          return (
+            <Badge variant="outline" className={badge.className}>
+              {badge.label}
+            </Badge>
+          );
+        },
       },
       {
         id: "status",
-        header: "Status",
+        header: "Estado",
         cell: ({ row }) => {
           const isBanned =
             row.original.banned &&
@@ -239,7 +282,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
             return (
               <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
                 <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />
-                Banned
+                Bloqueado
               </Badge>
             );
           }
@@ -247,19 +290,19 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
           return row.original.emailVerificationTime ? (
             <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
               <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-green-500" />
-              Active
+              Activo
             </Badge>
           ) : (
             <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-600">
               <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-gray-400" />
-              Inactive
+              Inactivo
             </Badge>
           );
         },
       },
       {
         accessorKey: "_creationTime",
-        header: "Joined",
+        header: "Registrado",
         cell: ({ row }) => (
           <span className="text-muted-foreground">{formatDate(row.original._creationTime)}</span>
         ),
@@ -276,19 +319,19 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
                 onClick={(e) => e.stopPropagation()}
               >
                 <IconDotsVertical />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">Abrir menú</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem asChild>
                 <Link href={`${basePath}/${row.original._id}`}>
                   <IconEdit className="mr-2 h-4 w-4" />
-                  Edit
+                  Editar
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleToggleRole(row.original._id, row.original.role)}>
                 <IconUserShield className="mr-2 h-4 w-4" />
-                {row.original.role === "admin" ? "Remove Admin" : "Make Admin"}
+                {row.original.role === "admin" ? "Quitar admin" : "Hacer admin"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -299,7 +342,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
                 }}
               >
                 <IconTrash className="mr-2 h-4 w-4" />
-                Delete
+                Eliminar
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -355,23 +398,36 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
   return (
     <>
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="relative">
-          <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9 w-64"
-          />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar usuarios..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-9 w-64"
+            />
+          </div>
+          <Select value={roleView} onValueChange={(v) => setRoleView(v as RoleView)}>
+            <SelectTrigger size="sm" className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLE_FILTER_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
+                <span className="hidden lg:inline">Columnas</span>
                 <IconChevronDown />
               </Button>
             </DropdownMenuTrigger>
@@ -429,7 +485,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No users found.
+                  No hay usuarios.
                 </TableCell>
               </TableRow>
             )}
@@ -440,13 +496,13 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-4">
         <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-          {table.getFilteredRowModel().rows.length} user(s) total
-          {status === "LoadingMore" && " (loading more...)"}
+          {table.getFilteredRowModel().rows.length} usuario(s)
+          {status === "LoadingMore" && " (cargando más...)"}
         </div>
         <div className="flex w-full items-center gap-8 lg:w-fit">
           <div className="hidden items-center gap-2 lg:flex">
             <Label htmlFor="rows-per-page" className="text-sm font-medium">
-              Rows per page
+              Filas por página
             </Label>
             <Select
               value={`${table.getState().pagination.pageSize}`}
@@ -465,7 +521,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
             </Select>
           </div>
           <div className="flex w-fit items-center justify-center text-sm font-medium">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
           </div>
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
             <Button
@@ -474,7 +530,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
-              <span className="sr-only">Go to first page</span>
+              <span className="sr-only">Primera página</span>
               <IconChevronsLeft />
             </Button>
             <Button
@@ -484,7 +540,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <span className="sr-only">Go to previous page</span>
+              <span className="sr-only">Página anterior</span>
               <IconChevronLeft />
             </Button>
             <Button
@@ -494,7 +550,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              <span className="sr-only">Go to next page</span>
+              <span className="sr-only">Página siguiente</span>
               <IconChevronRight />
             </Button>
             <Button
@@ -504,7 +560,7 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >
-              <span className="sr-only">Go to last page</span>
+              <span className="sr-only">Última página</span>
               <IconChevronsRight />
             </Button>
           </div>
@@ -514,19 +570,19 @@ export function UserTable({ basePath = "/team", roleFilter }: UserTableProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar usuario</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this user? This action cannot be undone. All user
-              data, sessions, and associated accounts will be permanently removed.
+              ¿Seguro que quieres eliminar este usuario? Esta acción no se puede deshacer. Se
+              borrarán de forma permanente todos sus datos, sesiones y cuentas asociadas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,20 +1,8 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { use } from "react";
-import { UserDetail } from "@/components/app/dashboard/user-detail";
-import { Id } from "@packages/backend/convex/_generated/dataModel";
-
-export default function TeamMemberDetailPage({
-  params,
-}: {
-  params: Promise<{ userId: string }>;
-}) {
-  const { userId } = use(params);
-  return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <div className="px-4 lg:px-6">
-        <UserDetail userId={userId as Id<"users">} backPath="/team" />
-      </div>
-    </div>
-  );
+// The "Team" admin-management flow is disabled for the MVP (see /team). This
+// member-detail route redirects to the businesses list. User details are still
+// available under /users/[userId].
+export default function TeamMemberDetailPage() {
+  redirect("/negocios");
 }

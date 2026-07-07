@@ -86,10 +86,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 /**
  * « Mi negocio » — the Entrepreneur's self-service screen for the fiche they
- * own. Shows the current Estado clearly (with its meaning and the suspend /
- * reactivate action), lets the owner edit every fiche field at any time with the
- * SAME validations as submission (via `updateMyCommerce`, which never re-opens
- * approval), and manages the photos. Everything in Spanish.
+ * own. The edit form is split into scannable sections (Información básica,
+ * Contacto, Horario, Ubicación y detalles), each in its own card, with a single
+ * persistent "Guardar cambios" action at the bottom. All edits go through
+ * `updateMyCommerce` with the SAME validations as submission (and never re-open
+ * approval). Everything in Spanish.
  */
 export function MiNegocioView({ commerce }: { commerce: Commerce }) {
   const options = useQuery(api.table.commerces.getFormOptions);
@@ -175,7 +176,15 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Mi negocio</h1>
+        <p className="text-muted-foreground text-sm">
+          Gestiona la información de tu negocio y sus fotos.
+        </p>
+      </div>
+
+      {/* Estado */}
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -196,17 +205,19 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Editar mi negocio</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form id="form-mi-negocio" onSubmit={form.handleSubmit(onSubmit)}>
+      {/* Edit form — one <form>, sectioned into cards, single save action. */}
+      <form
+        id="form-mi-negocio"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col gap-6"
+      >
+        {/* Información básica */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Información básica</CardTitle>
+          </CardHeader>
+          <CardContent>
             <FieldGroup>
-              {formError && (
-                <div className="text-destructive text-sm">{formError}</div>
-              )}
-
               <Controller
                 name="name"
                 control={form.control}
@@ -296,7 +307,17 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
                   </Field>
                 )}
               />
+            </FieldGroup>
+          </CardContent>
+        </Card>
 
+        {/* Contacto */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contacto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
               <Controller
                 name="whatsapp"
                 control={form.control}
@@ -313,29 +334,6 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
-                  </Field>
-                )}
-              />
-
-              <HorarioEditor
-                value={horario}
-                onChange={setHorario}
-                error={horarioError}
-              />
-
-              <Controller
-                name="torreApto"
-                control={form.control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel htmlFor="torreApto">
-                      Torre y apartamento
-                    </FieldLabel>
-                    <Input
-                      {...field}
-                      id="torreApto"
-                      placeholder="Torre 4 · Apto 926"
-                    />
                   </Field>
                 )}
               />
@@ -364,6 +362,47 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
                       Nombre de contacto
                     </FieldLabel>
                     <Input {...field} id="contactName" />
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </CardContent>
+        </Card>
+
+        {/* Horario */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Horario</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HorarioEditor
+              value={horario}
+              onChange={setHorario}
+              error={horarioError}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Ubicación y detalles */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ubicación y detalles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <Controller
+                name="torreApto"
+                control={form.control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor="torreApto">
+                      Torre y apartamento
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="torreApto"
+                      placeholder="Torre 4 · Apto 926"
+                    />
                   </Field>
                 )}
               />
@@ -408,21 +447,28 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
                   </Field>
                 )}
               />
-
-              <Field>
-                <Button
-                  type="submit"
-                  form="form-mi-negocio"
-                  disabled={isLoading}
-                >
-                  {isLoading ? <Spinner /> : "Guardar cambios"}
-                </Button>
-              </Field>
             </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
+        {formError && (
+          <div className="text-destructive text-sm">{formError}</div>
+        )}
+
+        {/* Persistent save bar — stays reachable at the bottom of the long form. */}
+        <div className="bg-background/80 sticky bottom-0 -mx-1 flex justify-end rounded-lg border p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <Button
+            type="submit"
+            form="form-mi-negocio"
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? <Spinner /> : "Guardar cambios"}
+          </Button>
+        </div>
+      </form>
+
+      {/* Fotos */}
       <Card>
         <CardHeader>
           <CardTitle>Fotos del negocio</CardTitle>
