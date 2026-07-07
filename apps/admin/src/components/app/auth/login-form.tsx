@@ -77,9 +77,10 @@ export function LoginForm({
       if (!signingIn) {
         router.replace(`/verify-email?email=${data.email}`);
       } else {
-        // Signed in — land on the admin home ("/" forwards to /team). The
-        // AdminGuard there bounces a non-admin back to /login?error=admin_required.
-        router.replace("/");
+        // Route by role: only a Super admin belongs in the admin back-office
+        // (/team). An Entrepreneur (role "entreprise" or a fresh "user" that
+        // hasn't submitted a fiche yet) goes to their own space, « Mi negocio ».
+        router.replace(user.role === "admin" ? "/team" : "/mi-negocio");
       }
     } catch (error) {
       // The account exists (checked above), so a failed password sign-in is a

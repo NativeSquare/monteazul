@@ -2,11 +2,13 @@
 
 import * as React from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useConvex } from "convex/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { api } from "@packages/backend/convex/_generated/api";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function AccesoForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter();
   const { signIn } = useAuthActions();
+  const convex = useConvex();
   const [formError, setFormError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -59,7 +62,10 @@ export function AccesoForm({ className, ...props }: React.ComponentProps<"div">)
         flow: "signIn",
       });
       if (signingIn) {
-        router.replace("/mi-negocio");
+        // Route by role: a Super admin who signs in here still lands on the
+        // admin back-office (/team); everyone else goes to « Mi negocio ».
+        const me = await convex.query(api.table.users.currentUser);
+        router.replace(me?.role === "admin" ? "/team" : "/mi-negocio");
       } else {
         router.replace(`/verificar?email=${encodeURIComponent(data.email)}`);
       }
