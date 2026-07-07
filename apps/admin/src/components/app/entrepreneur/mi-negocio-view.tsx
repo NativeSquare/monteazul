@@ -218,7 +218,7 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Mi negocio</h1>
         <p className="text-muted-foreground text-sm">
@@ -259,7 +259,7 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
       <form
         id="form-mi-negocio"
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-6"
+        className="grid gap-6 lg:grid-cols-2 lg:items-start"
       >
         {/* Información básica */}
         <Card>
@@ -510,11 +510,13 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
         </Card>
 
         {formError && (
-          <div className="text-destructive text-sm">{formError}</div>
+          <div className="text-destructive text-sm lg:col-span-2">
+            {formError}
+          </div>
         )}
 
         {/* Persistent save bar — stays reachable at the bottom of the long form. */}
-        <div className="bg-background/80 sticky bottom-0 -mx-1 flex justify-end rounded-lg border p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="bg-background/80 sticky bottom-0 -mx-1 flex justify-end rounded-lg border p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:col-span-2">
           <Button
             type="submit"
             form="form-mi-negocio"
