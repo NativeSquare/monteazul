@@ -42,4 +42,4 @@ yarn-error.log*
 .claude
 
 # vscode
-.vscode
+.vscode.vercel
