@@ -9,6 +9,10 @@
     "./categories": {
       "types": "./categories.d.ts",
       "default": "./categories.js"
+    },
+    "./legal": {
+      "types": "./legal.d.ts",
+      "default": "./legal.js"
     }
   },
   "scripts": {

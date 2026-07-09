@@ -19,6 +19,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordInput } from "@/components/custom/password-input";
 import { Spinner } from "@/components/ui/spinner";
 import { getConvexErrorMessage } from "@/utils/getConvexErrorMessage";
@@ -32,6 +33,10 @@ const formSchema = z
       .email("Introduce un correo válido."),
     password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
     confirmPassword: z.string().min(1, "Confirma tu contraseña."),
+    acceptTerms: z.boolean().refine((value) => value, {
+      message:
+        "Debes aceptar los Términos y Condiciones y la Política de Privacidad.",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden.",
@@ -54,7 +59,13 @@ export function RegistroForm({ className, ...props }: React.ComponentProps<"div"
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      acceptTerms: false,
+    },
   });
 
   async function onSubmit(data: FormValues) {
@@ -168,6 +179,55 @@ export function RegistroForm({ className, ...props }: React.ComponentProps<"div"
                       id="confirmPassword"
                       aria-invalid={fieldState.invalid}
                     />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="acceptTerms"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="acceptTerms"
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                        aria-invalid={fieldState.invalid}
+                        className="mt-0.5"
+                      />
+                      <FieldLabel
+                        htmlFor="acceptTerms"
+                        className="text-sm font-normal leading-snug"
+                      >
+                        <span>
+                          He leído y acepto los{" "}
+                          <Link
+                            href="/terminos"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold underline underline-offset-4"
+                          >
+                            Términos y Condiciones
+                          </Link>{" "}
+                          y la{" "}
+                          <Link
+                            href="/privacidad"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold underline underline-offset-4"
+                          >
+                            Política de Privacidad
+                          </Link>
+                          .
+                        </span>
+                      </FieldLabel>
+                    </div>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
