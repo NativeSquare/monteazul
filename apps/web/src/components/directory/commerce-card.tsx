@@ -82,7 +82,9 @@ function CommerceCard({
       </div>
 
       <div className="px-0.5 pt-2.5">
-        <div className="text-[15px] font-bold text-ink">{commerce.name}</div>
+        <div className="truncate text-[15px] font-bold text-ink">
+          {commerce.name}
+        </div>
         <div className="mt-[3px] text-xs text-ink-muted">{secondary}</div>
         {status ? (
           <div className="mt-[7px] flex items-center gap-[5px] text-[11.5px] font-medium text-ink-muted">

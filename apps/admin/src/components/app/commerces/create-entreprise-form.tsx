@@ -24,6 +24,7 @@ import {
 import {
   CommerceFields,
   type CommerceFieldsValues,
+  RequiredMark,
 } from "@/components/app/commerces/commerce-fields";
 import {
   PhotoPicker,
@@ -230,6 +231,7 @@ export function CreateEntrepriseForm() {
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="email">
                     Correo electrónico del comerciante
+                    <RequiredMark />
                   </FieldLabel>
                   <Input
                     {...field}

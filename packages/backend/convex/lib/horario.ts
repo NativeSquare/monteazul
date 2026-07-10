@@ -147,7 +147,7 @@ export function commerceStatus(
     return {
       state: "abierto",
       short: "Abierto",
-      text: `Abierto ahora · cierra a las ${formatMinutes(openNow.to)}`,
+      text: `Abierto ahora · Cierra a las ${formatMinutes(openNow.to)}`,
     };
   }
 
@@ -164,7 +164,7 @@ export function commerceStatus(
     const day = WEEKDAY_LABELS_ES[(dow + next.dayOffset) % 7].toLowerCase();
     when = `el ${day} ${at}`;
   }
-  return { state: "cerrado", short: "Cerrado", text: `Cerrado · abre ${when}` };
+  return { state: "cerrado", short: "Cerrado", text: `Cerrado · Abre ${when}` };
 }
 
 /** One row of the weekly schedule for the detail « Horario » card. */

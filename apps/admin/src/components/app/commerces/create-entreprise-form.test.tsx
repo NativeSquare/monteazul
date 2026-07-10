@@ -58,7 +58,7 @@ function fillValidFiche() {
   fireEvent.change(screen.getByLabelText(/nombre del negocio/i), {
     target: { value: "TecnoFix MZ" },
   });
-  fireEvent.change(screen.getByLabelText(/^categoría$/i), {
+  fireEvent.change(screen.getByLabelText(/^categoría/i), {
     target: { value: "Tecnología" },
   });
   fireEvent.change(screen.getByLabelText(/descripción/i), {

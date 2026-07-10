@@ -63,7 +63,7 @@ describe("commerceStatus — semanal", () => {
     const status = commerceStatus(weekdays(690, 900), atBogota(11, 30)); // opens 11:30
     expect(status.state).toBe("abierto");
     expect(status.short).toBe("Abierto");
-    expect(status.text).toBe("Abierto ahora · cierra a las 15:00");
+    expect(status.text).toBe("Abierto ahora · Cierra a las 15:00");
   });
 
   it("is cerrado exactly at the closing minute (exclusive) → reopens next day", () => {
@@ -71,7 +71,7 @@ describe("commerceStatus — semanal", () => {
     expect(status.state).toBe("cerrado");
     expect(status.short).toBe("Cerrado");
     // Today's only window has already closed, so the next opening is Friday.
-    expect(status.text).toBe("Cerrado · abre mañana a las 11:30");
+    expect(status.text).toBe("Cerrado · Abre mañana a las 11:30");
   });
 
   it("is abierto one minute before closing", () => {
@@ -83,7 +83,7 @@ describe("commerceStatus — semanal", () => {
   it("is cerrado before today's opening and announces it for today", () => {
     const status = commerceStatus(weekdays(450, 960), atBogota(7, 29)); // opens 7:30
     expect(status.state).toBe("cerrado");
-    expect(status.text).toBe("Cerrado · abre a las 7:30");
+    expect(status.text).toBe("Cerrado · Abre a las 7:30");
   });
 
   it("is cerrado just after midnight Bogota for a daytime schedule", () => {
@@ -109,11 +109,11 @@ describe("commerceStatus — semanal", () => {
     // 10:00 → inside the morning window.
     const morning = commerceStatus(split, atBogota(10, 0));
     expect(morning.state).toBe("abierto");
-    expect(morning.text).toBe("Abierto ahora · cierra a las 12:00");
+    expect(morning.text).toBe("Abierto ahora · Cierra a las 12:00");
     // 13:00 → between the two windows: closed, reopens today at 14:00.
     const gap = commerceStatus(split, atBogota(13, 0));
     expect(gap.state).toBe("cerrado");
-    expect(gap.text).toBe("Cerrado · abre a las 14:00");
+    expect(gap.text).toBe("Cerrado · Abre a las 14:00");
   });
 
   it("announces a reopening several days away by weekday name", () => {
@@ -121,7 +121,7 @@ describe("commerceStatus — semanal", () => {
     const mondayOnly = semanal([{ dayOfWeek: 1, from: 540, to: 1080 }]);
     const status = commerceStatus(mondayOnly, atBogota(12, 0));
     expect(status.state).toBe("cerrado");
-    expect(status.text).toBe("Cerrado · abre el lunes a las 9:00");
+    expect(status.text).toBe("Cerrado · Abre el lunes a las 9:00");
   });
 
   it("is cerrado with no reopening text when the schedule is empty", () => {

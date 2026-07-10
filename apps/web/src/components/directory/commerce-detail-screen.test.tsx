@@ -59,7 +59,6 @@ function makeCommerce(
         to: 900,
       })),
     },
-    torreApto: "Torre 4 · Apto 926",
     instagram: "sazon.abuela",
     contactName: "María López",
     ...overrides,
@@ -106,16 +105,18 @@ describe("CommerceDetailScreen", () => {
     expect(link.getAttribute("href")).toBe("/");
   });
 
-  it("renders the name, subcategory pill, location and description", () => {
+  it("renders the name, subcategory pill and description — never the torre/apto (internal)", () => {
     renderDetail(makeCommerce());
     expect(
       screen.getByRole("heading", { name: "Sazón de la Abuela" }),
     ).toBeDefined();
     expect(screen.getByText("Almuerzos y comida típica")).toBeDefined();
-    expect(screen.getByText("Torre 4 · Apto 926")).toBeDefined();
     expect(
       screen.getByText(/Almuerzos caseros y comida típica colombiana/),
     ).toBeDefined();
+    // The tower/apartment is internal context: the public projection no longer
+    // carries it, and the fiche must not render any location line.
+    expect(screen.queryByText(/Torre 4/)).toBeNull();
   });
 
   it("renders the Horario card as a per-day weekly schedule", () => {
@@ -127,14 +128,17 @@ describe("CommerceDetailScreen", () => {
     expect(screen.getAllByText("11:30 – 15:00")).toHaveLength(5);
   });
 
-  it("renders the « Disponible » horario mode with its label and state text", () => {
+  it("renders the « Disponible » horario mode with its label, without repeating it in the state line", () => {
     renderDetail(
       makeCommerce({
         horario: { mode: "disponible", label: "con cita previa" },
       }),
     );
+    // The label appears once in the Horario card; the bottom state line shows
+    // only the state (the badge + card already carry the label).
     expect(screen.getByText("con cita previa")).toBeDefined();
-    expect(screen.getByText("Disponible · con cita previa")).toBeDefined();
+    expect(screen.queryByText("Disponible · con cita previa")).toBeNull();
+    expect(screen.getAllByText("Disponible").length).toBeGreaterThan(0);
   });
 
   it("renders the phone in « +57 XXX XXX XXXX » format and the Instagram link", () => {

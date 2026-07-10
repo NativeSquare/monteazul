@@ -1,7 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { ImagePlus, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, ImagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { MAX_PHOTO_MB } from "@packages/backend/convex/lib/photos";
 
@@ -12,7 +29,8 @@ import { Button } from "@/components/ui/button";
  * so files are only PICKED here (with object-URL previews) and uploaded at
  * submission time — abandoning the wizard never leaves orphan blobs in storage.
  * Controlled component: `value`/`onChange`. Selection order is the vitrine
- * order (first = « Portada »), like the « Mi negocio » photo manager.
+ * order (first = « Portada »), reorderable by the same drag-and-drop as the
+ * « Mi negocio » photo manager.
  */
 
 export type PickedPhoto = {
@@ -31,6 +49,13 @@ export function PhotoPicker({
 }) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const counter = React.useRef(0);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   // Revoke every preview URL on unmount (removals revoke eagerly below).
   const latest = React.useRef(value);
@@ -70,12 +95,21 @@ export function PhotoPicker({
     onChange(value.filter((photo) => photo.id !== id));
   }
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = value.findIndex((photo) => photo.id === active.id);
+    const to = value.findIndex((photo) => photo.id === over.id);
+    if (from === -1 || to === -1) return;
+    onChange(arrayMove(value, from, to));
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-muted-foreground text-xs">
-          La primera foto es la portada de tu negocio. Máximo {MAX_PHOTO_MB} MB
-          por imagen. Podrás reordenarlas después desde « Mi negocio ».
+          Arrastra para reordenar: la primera foto es la portada de tu negocio.
+          Máximo {MAX_PHOTO_MB} MB por imagen.
         </p>
         <Button
           type="button"
@@ -105,41 +139,91 @@ export function PhotoPicker({
           Aún no has añadido fotos.
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-          {value.map((photo, index) => (
-            <div
-              key={photo.id}
-              data-slot="photo-tile"
-              className="bg-muted relative aspect-square overflow-hidden rounded-lg border"
-            >
-              {/* Object URLs are local previews — next/image cannot optimise them. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={photo.previewUrl}
-                alt="Foto del negocio"
-                className="size-full object-cover"
-              />
-
-              {index === 0 && (
-                <span className="bg-primary text-primary-foreground absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium">
-                  Portada
-                </span>
-              )}
-
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                aria-label="Eliminar foto"
-                className="absolute bottom-1.5 right-1.5 size-6"
-                onClick={() => handleRemove(photo.id)}
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={value.map((photo) => photo.id)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {value.map((photo, index) => (
+                <SortablePickedPhoto
+                  key={photo.id}
+                  photo={photo}
+                  isCover={index === 0}
+                  onRemove={() => handleRemove(photo.id)}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
+    </div>
+  );
+}
+
+function SortablePickedPhoto({
+  photo,
+  isCover,
+  onRemove,
+}: {
+  photo: PickedPhoto;
+  isCover: boolean;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: photo.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      data-slot="photo-tile"
+      className="bg-muted relative aspect-square overflow-hidden rounded-lg border"
+    >
+      {/* Object URLs are local previews — next/image cannot optimise them. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={photo.previewUrl}
+        alt="Foto del negocio"
+        className="size-full object-cover"
+      />
+
+      {isCover && (
+        <span className="bg-primary text-primary-foreground absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium">
+          Portada
+        </span>
+      )}
+
+      <button
+        type="button"
+        aria-label="Mover foto"
+        className="bg-background/80 text-foreground absolute right-1.5 top-1.5 flex size-6 cursor-grab touch-none items-center justify-center rounded active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="size-4" />
+      </button>
+
+      <Button
+        type="button"
+        variant="destructive"
+        size="icon"
+        aria-label="Eliminar foto"
+        className="absolute bottom-1.5 right-1.5 size-6"
+        onClick={onRemove}
+      >
+        <Trash2 className="size-3.5" />
+      </Button>
     </div>
   );
 }

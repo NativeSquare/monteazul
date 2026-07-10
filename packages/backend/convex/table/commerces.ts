@@ -119,7 +119,8 @@ export async function toPublicCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     whatsapp: doc.whatsapp,
     photos,
     horario: doc.horario,
-    torreApto: doc.torreApto,
+    // `torreApto` is deliberately NOT exposed: the tower/apartment is internal
+    // context for the admin and the owner, never shown on the public fiche.
     instagram: doc.instagram,
     contactName: doc.contactName,
   };

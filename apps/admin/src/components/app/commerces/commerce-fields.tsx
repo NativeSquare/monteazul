@@ -37,6 +37,19 @@ import {
  * (`lib/commerce.assertValidCommerceForm`) and is reused there too.
  */
 
+
+/**
+ * Red asterisk marking a required field. `aria-hidden`: assistive tech already
+ * gets the requirement from validation errors; the mark is a visual cue only.
+ */
+export function RequiredMark() {
+  return (
+    <span aria-hidden="true" className="text-destructive">
+      {" "}*
+    </span>
+  );
+}
+
 export type CommerceFieldsValues = {
   name: string;
   category: string;
@@ -74,7 +87,7 @@ export function CommerceBasicsFields({
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="name">Nombre del negocio</FieldLabel>
+            <FieldLabel htmlFor="name">Nombre del negocio<RequiredMark /></FieldLabel>
             <Input {...field} id="name" aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -86,7 +99,7 @@ export function CommerceBasicsFields({
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="category">Categoría</FieldLabel>
+            <FieldLabel htmlFor="category">Categoría<RequiredMark /></FieldLabel>
             <NativeSelect
               {...field}
               id="category"
@@ -137,7 +150,7 @@ export function CommerceBasicsFields({
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="description">Descripción</FieldLabel>
+            <FieldLabel htmlFor="description">Descripción<RequiredMark /></FieldLabel>
             <Textarea
               {...field}
               id="description"
@@ -165,7 +178,7 @@ export function CommerceContactFields({
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="whatsapp">WhatsApp</FieldLabel>
+            <FieldLabel htmlFor="whatsapp">WhatsApp<RequiredMark /></FieldLabel>
             <Input
               {...field}
               id="whatsapp"
@@ -237,7 +250,7 @@ export function CommerceLocationFields({
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="resides">{residesLabel}</FieldLabel>
+            <FieldLabel htmlFor="resides">{residesLabel}<RequiredMark /></FieldLabel>
             <NativeSelect
               {...field}
               id="resides"

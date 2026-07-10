@@ -119,7 +119,7 @@ export function DirectoryScreen() {
                   card is cut 16px before the screen edge (symmetric with the
                   left) and the last card keeps its gutter when scrolled. Both
                   are dropped in the desktop grid, where lg:px-8 takes over. */}
-              <div className="mr-4 flex snap-x gap-3.5 overflow-x-auto pb-1.5 pl-4 [scrollbar-width:none] lg:mr-0 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:gap-y-6 lg:overflow-visible lg:px-8 xl:grid-cols-3 2xl:grid-cols-4">
+              <div className="mr-4 flex snap-x gap-3.5 overflow-x-auto pb-1.5 pl-4 scroll-pl-4 [scrollbar-width:none] lg:mr-0 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:gap-y-6 lg:overflow-visible lg:px-8 xl:grid-cols-3 2xl:grid-cols-4">
                 {section.commerces.map((commerce) => (
                   <CommerceCard
                     key={commerce._id}

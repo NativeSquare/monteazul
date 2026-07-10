@@ -12,7 +12,7 @@ import { api } from "@packages/backend/convex/_generated/api";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldGroup } from "@/components/ui/field";
+import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { getConvexErrorMessage } from "@/utils/getConvexErrorMessage";
 import {
@@ -160,10 +160,6 @@ export function CommerceEditForm({ commerce }: { commerce: AdminCommerce }) {
         <CardContent>
           <form id="form-edit-fiche" onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
-              {formError && (
-                <div className="text-destructive text-sm">{formError}</div>
-              )}
-
               <CommerceFields
                 control={form.control}
                 options={options}
@@ -176,16 +172,6 @@ export function CommerceEditForm({ commerce }: { commerce: AdminCommerce }) {
                 residesLabel="¿Resides en Monteazul? (interno)"
                 notasLabel="Notas (interno)"
               />
-
-              <Field>
-                <Button
-                  type="submit"
-                  form="form-edit-fiche"
-                  disabled={isLoading}
-                >
-                  {isLoading ? <Spinner /> : "Guardar cambios"}
-                </Button>
-              </Field>
             </FieldGroup>
           </form>
         </CardContent>
@@ -199,6 +185,16 @@ export function CommerceEditForm({ commerce }: { commerce: AdminCommerce }) {
           <PhotoManager commerce={commerce} />
         </CardContent>
       </Card>
+
+      {/* Guardar — at the very bottom, below the photos (submits the form above). */}
+      <div className="flex flex-col items-end gap-2">
+        {formError && (
+          <div className="text-destructive text-sm">{formError}</div>
+        )}
+        <Button type="submit" form="form-edit-fiche" disabled={isLoading}>
+          {isLoading ? <Spinner /> : "Guardar cambios"}
+        </Button>
+      </div>
     </div>
   );
 }

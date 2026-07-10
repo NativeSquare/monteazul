@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Clock, Instagram, MapPin, Phone, Store } from "lucide-react";
+import { ChevronLeft, Clock, Instagram, Phone, Store } from "lucide-react";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@packages/backend/convex/_generated/api";
@@ -133,17 +133,7 @@ function DetailContent({
             {commerce.name}
           </h1>
 
-          {commerce.torreApto ? (
-            <div className="mt-2 flex items-center gap-1.5 text-[13px] text-ink-muted">
-              <MapPin
-                className="size-[15px] shrink-0 text-ink-faint"
-                strokeWidth={2}
-              />
-              {commerce.torreApto}
-            </div>
-          ) : null}
-
-          <p className="mt-[18px] text-[15px] leading-[1.6] text-ink-soft">
+          <p className="mt-[18px] whitespace-pre-line text-[15px] leading-[1.6] text-ink-soft">
             {commerce.description}
           </p>
 
@@ -178,8 +168,10 @@ function DetailContent({
                   ))}
                 </div>
               )}
+              {/* Bottom status line. In « Disponible » mode the label already
+                  sits just above — repeat only the state, not the label. */}
               <div className="mt-3 text-[12.5px] font-medium text-ink-muted">
-                {status.text}
+                {schedule.kind === "disponible" ? status.short : status.text}
               </div>
             </div>
           ) : null}

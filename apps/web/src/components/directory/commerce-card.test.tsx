@@ -55,7 +55,6 @@ const commerce: DirectoryCommerce = {
       to: 900,
     })),
   },
-  torreApto: "Torre 4 · Apto 926",
   instagram: "sazon.abuela",
   contactName: "María López",
 };
