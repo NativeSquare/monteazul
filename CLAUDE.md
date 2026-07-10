@@ -12,7 +12,7 @@ pnpm typecheck && pnpm lint && pnpm test
 
 ### Issue tracker
 
-Issues live in GitHub Issues (`alexpmichelet/monteazul`), managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues (`NativeSquare/monteazul`), managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
