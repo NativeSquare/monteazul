@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 import type { CategoryChip as CategoryChipToken, CategoryKey } from "@/lib/categories";
@@ -13,13 +14,14 @@ export type CategoryChipProps = {
 };
 
 /**
- * Vertical category filter chip: rounded icon square over a short label.
- * Colours come from the category design token (`@/lib/categories`), so the
- * primitive carries no hard-coded palette. Active = solid accent + white icon;
- * resting = soft pastel + accent icon.
+ * Vertical category filter chip: delivered circular icon over a short label.
+ * Selection is a plain image swap — light version resting, navy version when
+ * selected — reinforced by a soft navy halo around the icon and a bold navy
+ * label. Both variants stay mounted (opacity toggle) so the first selection
+ * never flashes while the navy PNG loads.
  */
 function CategoryChip({ chip, active = false, onSelect, className }: CategoryChipProps) {
-  const { Icon, color, pastel, label } = chip;
+  const { icon, label } = chip;
 
   return (
     <button
@@ -34,14 +36,26 @@ function CategoryChip({ chip, active = false, onSelect, className }: CategoryChi
     >
       <span
         aria-hidden
-        className="flex size-[52px] items-center justify-center rounded-chip transition-transform"
+        className="relative size-[52px] rounded-full transition-shadow"
         style={{
-          backgroundColor: active ? color : pastel,
-          color: active ? "#fff" : color,
-          boxShadow: active ? `0 5px 14px ${color}4D` : undefined,
+          // Soft halo in the brand navy (#1C2E4A) marking the active category.
+          boxShadow: active ? "0 3px 12px rgba(28, 46, 74, 0.45)" : undefined,
         }}
       >
-        <Icon className="size-6" strokeWidth={2} />
+        <Image
+          src={icon.light}
+          alt=""
+          width={52}
+          height={52}
+          className={cn("absolute inset-0", active && "opacity-0")}
+        />
+        <Image
+          src={icon.navy}
+          alt=""
+          width={52}
+          height={52}
+          className={cn("absolute inset-0", !active && "opacity-0")}
+        />
       </span>
       <span
         className={cn(

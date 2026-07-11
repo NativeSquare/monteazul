@@ -625,6 +625,149 @@ describe("removeCommerce", () => {
 });
 
 // -----------------------------------------------------------------------------
+// reorderCategory — manual public order within a category (Ronda 3).
+// -----------------------------------------------------------------------------
+
+async function publicNames(
+  t: ReturnType<typeof convexTest>,
+  category: string,
+): Promise<string[]> {
+  const sections = await t.query(api.table.commerces.listPublicByCategory, {});
+  return (
+    sections
+      .find((s) => s.category === category)
+      ?.commerces.map((c) => c.name) ?? []
+  );
+}
+
+describe("reorderCategory", () => {
+  test("refuses anonymous and non-admin callers", async () => {
+    const t = convexTest(schema, modules);
+    const entre = await makeUser(t, "e@example.com", "entreprise");
+    const id = await insertCommerce(t, entre, {
+      name: "N",
+      category: "Tecnología",
+      estado: "publicado",
+    });
+
+    await expect(
+      t.mutation(api.table.adminCommerces.reorderCategory, {
+        category: "Tecnología",
+        orderedIds: [id],
+      }),
+    ).rejects.toThrow();
+    await expect(
+      t.withIdentity({ subject: entre }).mutation(
+        api.table.adminCommerces.reorderCategory,
+        { category: "Tecnología", orderedIds: [id] },
+      ),
+    ).rejects.toThrow();
+  });
+
+  test("the public listing follows the admin order instead of creation order", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await makeUser(t, "a@example.com", "admin");
+    const owner = await makeUser(t, "o@example.com", "entreprise");
+    const first = await insertCommerce(t, owner, {
+      name: "Primera",
+      category: "Tecnología",
+      estado: "publicado",
+    });
+    const second = await insertCommerce(t, owner, {
+      name: "Segunda",
+      category: "Tecnología",
+      estado: "publicado",
+    });
+    const third = await insertCommerce(t, owner, {
+      name: "Tercera",
+      category: "Tecnología",
+      estado: "publicado",
+    });
+
+    // Without a manual order: creation order.
+    expect(await publicNames(t, "Tecnología")).toEqual([
+      "Primera",
+      "Segunda",
+      "Tercera",
+    ]);
+
+    await t.withIdentity({ subject: admin }).mutation(
+      api.table.adminCommerces.reorderCategory,
+      { category: "Tecnología", orderedIds: [third, first, second] },
+    );
+
+    expect(await publicNames(t, "Tecnología")).toEqual([
+      "Tercera",
+      "Primera",
+      "Segunda",
+    ]);
+  });
+
+  test("a fiche published after the reorder lands at the end of its category", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await makeUser(t, "a@example.com", "admin");
+    const owner = await makeUser(t, "o@example.com", "entreprise");
+    const a = await insertCommerce(t, owner, {
+      name: "A",
+      category: "Mascotas",
+      estado: "publicado",
+    });
+    const b = await insertCommerce(t, owner, {
+      name: "B",
+      category: "Mascotas",
+      estado: "publicado",
+    });
+    const pending = await insertCommerce(t, owner, {
+      name: "Nueva",
+      category: "Mascotas",
+      estado: "pendiente",
+    });
+
+    await t.withIdentity({ subject: admin }).mutation(
+      api.table.adminCommerces.reorderCategory,
+      { category: "Mascotas", orderedIds: [b, a] },
+    );
+    await t.withIdentity({ subject: admin }).mutation(
+      api.table.adminCommerces.approveCommerce,
+      { commerceId: pending },
+    );
+
+    expect(await publicNames(t, "Mascotas")).toEqual(["B", "A", "Nueva"]);
+  });
+
+  test("rejects an id from another category and rolls the whole order back", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await makeUser(t, "a@example.com", "admin");
+    const owner = await makeUser(t, "o@example.com", "entreprise");
+    const tec1 = await insertCommerce(t, owner, {
+      name: "Tec 1",
+      category: "Tecnología",
+      estado: "publicado",
+    });
+    const tec2 = await insertCommerce(t, owner, {
+      name: "Tec 2",
+      category: "Tecnología",
+      estado: "publicado",
+    });
+    const intruder = await insertCommerce(t, owner, {
+      name: "Mascota",
+      category: "Mascotas",
+      estado: "publicado",
+    });
+
+    await expect(
+      t.withIdentity({ subject: admin }).mutation(
+        api.table.adminCommerces.reorderCategory,
+        { category: "Tecnología", orderedIds: [tec2, intruder, tec1] },
+      ),
+    ).rejects.toThrow();
+
+    // The transaction rolled back: tec2 keeps NO sortOrder → creation order.
+    expect(await publicNames(t, "Tecnología")).toEqual(["Tec 1", "Tec 2"]);
+  });
+});
+
+// -----------------------------------------------------------------------------
 // Internal fields — visible to the admin, stripped from the public queries.
 // -----------------------------------------------------------------------------
 

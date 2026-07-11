@@ -3,28 +3,16 @@ import {
   TODOS_CHIP,
   type CommerceCategory,
 } from "@packages/shared/categories";
-import {
-  Ellipsis,
-  HeartPulse,
-  House,
-  LayoutGrid,
-  PawPrint,
-  Scissors,
-  Shirt,
-  Smartphone,
-  Utensils,
-  type LucideIcon,
-} from "lucide-react";
 
 /**
  * Category filter chips for the Monteazul directory.
  *
- * The colour/pastel/short-label tokens are the single source of truth in
- * `@packages/shared` (derived from `docs/product/design.md`); this module only
- * adds what is web-specific: the Lucide icon per chip and the "Todos" filter.
- * Only the categories with a chip token appear as chips — `Inmuebles y
- * servicios` is a valid Commerce category but renders only as a list section
- * (no coloured filter chip).
+ * The short-label tokens are the single source of truth in `@packages/shared`
+ * (derived from `docs/product/design.md`); this module only adds what is
+ * web-specific: the delivered icon pair per chip (light = resting, navy =
+ * selected — PNGs under `public/categories/`) and the "Todos" filter. Only the
+ * categories with a chip token appear as chips — `Inmuebles y servicios` is a
+ * valid Commerce category but renders only as a list section (no filter chip).
  */
 export type CategoryKey =
   | "todos"
@@ -43,31 +31,27 @@ export type CategoryChip = {
   label: string;
   /** Canonical Spanish Commerce category, or null for the "Todos" filter. */
   category: CommerceCategory | null;
-  /** Accent colour used for the active chip and icon. */
-  color: string;
-  /** Soft pastel used for the resting chip background. */
-  pastel: string;
-  Icon: LucideIcon;
+  /** Delivered icon pair: `light` when resting, `navy` when selected. */
+  icon: { light: string; navy: string };
 };
 
-const CHIP_ICONS: {
+const CHIP_DEFS: {
   key: CategoryKey;
   category: CommerceCategory | null;
-  Icon: LucideIcon;
 }[] = [
-  { key: "todos", category: null, Icon: LayoutGrid },
-  { key: "comida", category: "Comida y bebida", Icon: Utensils },
-  { key: "mascotas", category: "Mascotas", Icon: PawPrint },
-  { key: "belleza", category: "Belleza y cuidado personal", Icon: Scissors },
-  { key: "salud", category: "Salud y bienestar", Icon: HeartPulse },
-  { key: "ropa", category: "Accesorios y ropa", Icon: Shirt },
-  { key: "hogar", category: "Hogar y artesanías", Icon: House },
-  { key: "tecnologia", category: "Tecnología", Icon: Smartphone },
-  { key: "otro", category: "Otro", Icon: Ellipsis },
+  { key: "todos", category: null },
+  { key: "comida", category: "Comida y bebida" },
+  { key: "mascotas", category: "Mascotas" },
+  { key: "belleza", category: "Belleza y cuidado personal" },
+  { key: "salud", category: "Salud y bienestar" },
+  { key: "ropa", category: "Accesorios y ropa" },
+  { key: "hogar", category: "Hogar y artesanías" },
+  { key: "tecnologia", category: "Tecnología" },
+  { key: "otro", category: "Otro" },
 ];
 
-export const CATEGORY_CHIPS: readonly CategoryChip[] = CHIP_ICONS.map(
-  ({ key, category, Icon }) => {
+export const CATEGORY_CHIPS: readonly CategoryChip[] = CHIP_DEFS.map(
+  ({ key, category }) => {
     const token =
       category === null ? TODOS_CHIP : CATEGORY_CHIP_TOKENS[category];
     if (!token) {
@@ -77,9 +61,10 @@ export const CATEGORY_CHIPS: readonly CategoryChip[] = CHIP_ICONS.map(
       key,
       category,
       label: token.label,
-      color: token.color,
-      pastel: token.pastel,
-      Icon,
+      icon: {
+        light: `/categories/${key}-light.png`,
+        navy: `/categories/${key}-navy.png`,
+      },
     };
   },
 );

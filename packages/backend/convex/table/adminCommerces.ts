@@ -65,6 +65,7 @@ async function toAdminCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     resides: doc.resides,
     notas: doc.notas,
     estado: doc.estado,
+    sortOrder: doc.sortOrder,
     ownerId: doc.ownerId,
     ownerEmail: owner?.email,
     ownerName: owner?.name,
@@ -228,6 +229,34 @@ export const updateCommerce = mutation({
 
     // Deliberately does not touch `estado` nor `ownerId`.
     await ctx.db.patch(args.commerceId, commerceWriteFields(args));
+  },
+});
+
+/**
+ * Persist the manual public order of a category: each given fiche gets
+ * `sortOrder` = its index in the list. Fiches of the category NOT included
+ * (e.g. pendiente/suspendido, or published after the drag) keep their previous
+ * value — and an absent `sortOrder` sorts after every ordered fiche on the
+ * public listing, so new fiches land at the end of their category. Rejects ids
+ * that don't belong to the given category (the whole mutation rolls back).
+ * Admin only.
+ */
+export const reorderCategory = mutation({
+  args: {
+    category: categoryValidator,
+    orderedIds: v.array(v.id("commerces")),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    for (const [index, commerceId] of args.orderedIds.entries()) {
+      const commerce = await ctx.db.get(commerceId);
+      if (!commerce || commerce.category !== args.category) {
+        throw new ConvexError({
+          message: "La lista de orden no coincide con la categoría.",
+        });
+      }
+      await ctx.db.patch(commerceId, { sortOrder: index });
+    }
   },
 });
 

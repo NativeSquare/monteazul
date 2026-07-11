@@ -31,6 +31,7 @@ import {
   EstadoBadge,
   type Estado,
 } from "@/components/app/commerces/estado-badge";
+import { ReorderCategoryDialog } from "@/components/app/commerces/reorder-category-dialog";
 
 const ESTADOS: Estado[] = ["pendiente", "publicado", "suspendido"];
 
@@ -97,6 +98,9 @@ export function CommerceTable() {
             ))}
           </NativeSelect>
         </div>
+
+        {/* Manual public order — per category, so it needs the filter above. */}
+        <ReorderCategoryDialog category={category} />
       </div>
 
       {commerces === undefined ? (

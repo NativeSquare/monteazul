@@ -1,10 +1,8 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-import {
-  CATEGORY_CHIPS,
-  CATEGORY_CHIP_BY_KEY,
-  type CategoryChip,
-} from "./categories";
+import { CATEGORY_CHIPS, CATEGORY_CHIP_BY_KEY } from "./categories";
 
 describe("CATEGORY_CHIPS", () => {
   it("exposes the Todos filter plus the eight chip categories in order", () => {
@@ -21,20 +19,6 @@ describe("CATEGORY_CHIPS", () => {
     ]);
   });
 
-  it("maps each chip to the exact design token colours from docs/product/design.md", () => {
-    const byKey = (key: CategoryChip["key"]) =>
-      CATEGORY_CHIPS.find((c) => c.key === key);
-
-    expect(byKey("todos")).toMatchObject({ color: "#1C2E4A", pastel: "#EEF1F6" });
-    expect(byKey("comida")).toMatchObject({ color: "#E07B39", pastel: "#FBEEE3" });
-    expect(byKey("mascotas")).toMatchObject({ color: "#0E9E8E", pastel: "#E0F2EF" });
-    expect(byKey("belleza")).toMatchObject({ color: "#C85BA0", pastel: "#F7E7F1" });
-    expect(byKey("salud")).toMatchObject({ color: "#2E9E5B", pastel: "#E4F4EA" });
-    expect(byKey("ropa")).toMatchObject({ color: "#5B62D6", pastel: "#E8E9FB" });
-    expect(byKey("hogar")).toMatchObject({ color: "#C2922B", pastel: "#F6EEDA" });
-    expect(byKey("tecnologia")).toMatchObject({ color: "#3D7FD1", pastel: "#E4EEFA" });
-  });
-
   it("binds each real chip to its canonical Spanish Commerce category, and Todos to none", () => {
     expect(CATEGORY_CHIP_BY_KEY.todos.category).toBeNull();
     expect(CATEGORY_CHIP_BY_KEY.comida.category).toBe("Comida y bebida");
@@ -44,9 +28,21 @@ describe("CATEGORY_CHIPS", () => {
     expect(CATEGORY_CHIP_BY_KEY.tecnologia.category).toBe("Tecnología");
   });
 
-  it("ships a renderable icon component for every chip", () => {
+  it("points each chip at its light/navy icon pair", () => {
     for (const chip of CATEGORY_CHIPS) {
-      expect(chip.Icon).toBeTruthy();
+      expect(chip.icon).toEqual({
+        light: `/categories/${chip.key}-light.png`,
+        navy: `/categories/${chip.key}-navy.png`,
+      });
+    }
+  });
+
+  it("ships both delivered PNGs in public/ for every chip", () => {
+    // Vitest runs with the app as cwd, so public/ resolves from there.
+    const publicDir = path.resolve(process.cwd(), "public");
+    for (const chip of CATEGORY_CHIPS) {
+      expect(existsSync(path.join(publicDir, chip.icon.light))).toBe(true);
+      expect(existsSync(path.join(publicDir, chip.icon.navy))).toBe(true);
     }
   });
 });

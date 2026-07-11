@@ -52,6 +52,11 @@ const documentSchema = {
   // Vertical focal point (0–100, % from the top) used to crop the FIRST photo
   // as the card cover. Absent = centred (50).
   coverFocusY: v.optional(v.number()),
+  // Admin-curated position of the fiche WITHIN its category on the public
+  // listing (lower = first). Absent = after every ordered fiche, oldest first
+  // — so a newly published fiche lands at the end of its category until the
+  // admin reorders it.
+  sortOrder: v.optional(v.number()),
   horario: v.optional(horarioValidator),
   torreApto: v.optional(v.string()),
   instagram: v.optional(v.string()),
@@ -184,7 +189,16 @@ async function fetchPublished(
 async function groupByCategory(ctx: QueryCtx, docs: Doc<"commerces">[]) {
   const sections = [];
   for (const category of COMMERCE_CATEGORIES) {
-    const inCategory = docs.filter((doc) => doc.category === category);
+    // Admin-curated order first (`reorderCategory`), then the fiches without a
+    // position (e.g. published after the last reorder), oldest first.
+    const inCategory = docs
+      .filter((doc) => doc.category === category)
+      .sort(
+        (a, b) =>
+          (a.sortOrder ?? Number.MAX_SAFE_INTEGER) -
+            (b.sortOrder ?? Number.MAX_SAFE_INTEGER) ||
+          a._creationTime - b._creationTime,
+      );
     if (inCategory.length === 0) continue;
     const commercesInCategory = await Promise.all(
       inCategory.map((doc) => toPublicCommerce(ctx, doc)),
