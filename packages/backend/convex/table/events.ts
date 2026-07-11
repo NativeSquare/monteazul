@@ -7,13 +7,15 @@ import { aggregateEvents, evolutionSeries } from "../lib/stats";
 import { bogotaDayKey } from "../lib/tracking";
 
 /**
- * The two kinds of tracking Événement journaled per Commerce (see CONTEXT.md
- * and ADR-0001). `visit` = a Visite (one unique visitor per fiche per day),
- * `whatsapp_click` = a Contact WhatsApp (raw, one per click).
+ * The kinds of tracking Événement journaled per Commerce (see CONTEXT.md and
+ * ADR-0001). `visit` = a Visite (one unique visitor per fiche per day);
+ * `whatsapp_click` = a Contact WhatsApp and `instagram_click` = a Clic a
+ * Instagram (both raw, one per click).
  */
 export const eventTypeValidator = v.union(
   v.literal("visit"),
   v.literal("whatsapp_click"),
+  v.literal("instagram_click"),
 );
 
 /**
@@ -35,7 +37,7 @@ const documentSchema = {
   // Set on `visit` events only: the America/Bogota calendar day ("YYYY-MM-DD")
   // the Visite belongs to. It is a derived dedup bucket, not personal data —
   // it backs the `by_visit_dedup` index so a Visite is at most one per
-  // (visitor, fiche, Bogota day). `whatsapp_click` events leave it undefined.
+  // (visitor, fiche, Bogota day). Click events leave it undefined.
   visitDay: v.optional(v.string()),
 };
 
@@ -61,6 +63,29 @@ export const recordWhatsAppClick = mutation({
   handler: async (ctx, args) => {
     await ctx.db.insert("events", {
       type: "whatsapp_click",
+      commerceId: args.commerceId,
+      timestamp: Date.now(),
+      visitorId: args.visitorId,
+    });
+    return null;
+  },
+});
+
+/**
+ * Records one Clic a Instagram — an `instagram_click` Événement — for a
+ * Commerce, with the exact same anonymous semantics as the Contact WhatsApp:
+ * RAW, never deduplicated, fire-and-forget right before the instagram.com
+ * navigation (the visitor reaches Instagram even if tracking fails). Stores
+ * only the opaque anonymous visitor id — no personal data.
+ */
+export const recordInstagramClick = mutation({
+  args: {
+    commerceId: v.id("commerces"),
+    visitorId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("events", {
+      type: "instagram_click",
       commerceId: args.commerceId,
       timestamp: Date.now(),
       visitorId: args.visitorId,
@@ -147,7 +172,7 @@ export const statsForCommerce = query({
     period: statsPeriodValidator,
   },
   handler: async (ctx, args) => {
-    await requireCommerceOwner(ctx, args.commerceId);
+    const { commerce } = await requireCommerceOwner(ctx, args.commerceId);
     const events = await ctx.db
       .query("events")
       .withIndex("by_commerce", (q) => q.eq("commerceId", args.commerceId))
@@ -156,6 +181,9 @@ export const statsForCommerce = query({
     return {
       totals: aggregateEvents(mapped, "day").totals,
       series: evolutionSeries(mapped, args.period, Date.now()),
+      // The Instagram metric only applies to fiches WITH an Instagram link —
+      // the page hides it entirely otherwise.
+      hasInstagram: Boolean(commerce.instagram),
     };
   },
 });

@@ -2,7 +2,11 @@
 
 import * as React from "react";
 import { useQuery } from "convex/react";
-import { IconEye, IconBrandWhatsapp } from "@tabler/icons-react";
+import {
+  IconBrandInstagram,
+  IconBrandWhatsapp,
+  IconEye,
+} from "@tabler/icons-react";
 import { api } from "@packages/backend/convex/_generated/api";
 import type { Id } from "@packages/backend/convex/_generated/dataModel";
 
@@ -25,7 +29,8 @@ import { StatCard } from "@/components/app/stats/stat-card";
 
 /**
  * « Estadísticas » — the Entrepreneur's statistics for the fiche they own.
- * Totals cards (« Visitas », « Contactos por WhatsApp ») plus an evolution chart
+ * Totals cards (« Visitas », « Contactos por WhatsApp » and — ONLY when the
+ * fiche has an Instagram link — « Clics a Instagram ») plus an evolution chart
  * with a day/week/month period selector. Every metric is aggregated AT READ from
  * the Événement journal by `statsForCommerce` (ADR-0001); the query is guarded so
  * an Entrepreneur only ever sees their OWN fiche's stats. All texts in Spanish.
@@ -40,17 +45,26 @@ export function EstadisticasView({
     commerceId,
     period,
   });
+  // The Instagram metric only applies to fiches WITH a link loaded.
+  const hasInstagram = stats?.hasInstagram ?? false;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <div>
         <h1 className="text-2xl font-semibold">Estadísticas</h1>
         <p className="text-muted-foreground text-sm">
-          Visitas y contactos por WhatsApp de tu negocio.
+          {hasInstagram
+            ? "Visitas, contactos por WhatsApp y clics a Instagram de tu negocio."
+            : "Visitas y contactos por WhatsApp de tu negocio."}
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div
+        className={cn(
+          "grid gap-4 sm:grid-cols-2",
+          hasInstagram && "lg:grid-cols-3",
+        )}
+      >
         <StatCard
           label="Visitas"
           value={stats?.totals.visits ?? 0}
@@ -65,6 +79,15 @@ export function EstadisticasView({
           icon={<IconBrandWhatsapp className="size-5" />}
           accentClassName="bg-emerald-100 text-emerald-700"
         />
+        {hasInstagram ? (
+          <StatCard
+            label="Clics a Instagram"
+            value={stats?.totals.instagramClicks ?? 0}
+            testId="stat-instagram-value"
+            icon={<IconBrandInstagram className="size-5" />}
+            accentClassName="bg-pink-100 text-pink-700"
+          />
+        ) : null}
       </div>
 
       <Card>
@@ -112,7 +135,11 @@ export function EstadisticasView({
               Aún no hay datos para mostrar.
             </div>
           ) : (
-            <StatsEvolutionChart series={stats.series} period={period} />
+            <StatsEvolutionChart
+              series={stats.series}
+              period={period}
+              showInstagram={hasInstagram}
+            />
           )}
         </CardContent>
       </Card>

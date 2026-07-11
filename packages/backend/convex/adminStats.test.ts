@@ -115,7 +115,7 @@ describe("globalStats access guard", () => {
     const stats = await t
       .withIdentity({ subject: admin })
       .query(api.table.adminStats.globalStats, { period: "all" });
-    expect(stats.totals).toEqual({ visits: 0, whatsappContacts: 0 });
+    expect(stats.totals).toEqual({ visits: 0, whatsappContacts: 0, instagramClicks: 0 });
     expect(stats.ranking).toEqual([]);
   });
 });
@@ -169,8 +169,10 @@ describe("globalStats consistency with the per-commerce Estadísticas (#14)", ()
       visits: statsA.totals.visits + statsB.totals.visits,
       whatsappContacts:
         statsA.totals.whatsappContacts + statsB.totals.whatsappContacts,
+      instagramClicks:
+        statsA.totals.instagramClicks + statsB.totals.instagramClicks,
     });
-    expect(global.totals).toEqual({ visits: 3, whatsappContacts: 3 });
+    expect(global.totals).toEqual({ visits: 3, whatsappContacts: 3, instagramClicks: 0 });
   });
 });
 
@@ -210,9 +212,9 @@ describe("globalStats ranking by WhatsApp contacts", () => {
       .query(api.table.adminStats.globalStats, { period: "all" });
 
     expect(stats.ranking).toEqual([
-      { commerceId: b, name: "Bazar", whatsappContacts: 3 },
-      { commerceId: a, name: "Aromas", whatsappContacts: 1 },
-      { commerceId: c, name: "Cafetería", whatsappContacts: 0 },
+      { commerceId: b, name: "Bazar", whatsappContacts: 3, instagramClicks: 0 },
+      { commerceId: a, name: "Aromas", whatsappContacts: 1, instagramClicks: 0 },
+      { commerceId: c, name: "Cafetería", whatsappContacts: 0, instagramClicks: 0 },
     ]);
   });
 });

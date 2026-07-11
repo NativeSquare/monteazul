@@ -21,11 +21,11 @@ export type StatsGranularity = "day" | "week" | "month";
 
 /** The only fields the aggregation reads from an Événement. */
 export type AggregatableEvent = {
-  type: "visit" | "whatsapp_click";
+  type: "visit" | "whatsapp_click" | "instagram_click";
   timestamp: number;
 };
 
-/** One point of the evolution series: a bucket and its two metric counts. */
+/** One point of the evolution series: a bucket and its metric counts. */
 export type StatsBucket = {
   /** Bucket key in America/Bogota (see `bogotaBucketKey`). */
   bucket: string;
@@ -33,11 +33,13 @@ export type StatsBucket = {
   visits: number;
   /** Contactos por WhatsApp in the bucket. */
   whatsappContacts: number;
+  /** Clics a Instagram in the bucket. */
+  instagramClicks: number;
 };
 
 /** Totals + evolution series returned to the Estadísticas page. */
 export type CommerceStats = {
-  totals: { visits: number; whatsappContacts: number };
+  totals: { visits: number; whatsappContacts: number; instagramClicks: number };
   series: StatsBucket[];
 };
 
@@ -97,22 +99,25 @@ export function aggregateEvents(
   events: AggregatableEvent[],
   granularity: StatsGranularity,
 ): CommerceStats {
-  const totals = { visits: 0, whatsappContacts: 0 };
+  const totals = { visits: 0, whatsappContacts: 0, instagramClicks: 0 };
   const buckets = new Map<string, StatsBucket>();
 
   for (const event of events) {
     const key = bogotaBucketKey(event.timestamp, granularity);
     let bucket = buckets.get(key);
     if (!bucket) {
-      bucket = { bucket: key, visits: 0, whatsappContacts: 0 };
+      bucket = { bucket: key, visits: 0, whatsappContacts: 0, instagramClicks: 0 };
       buckets.set(key, bucket);
     }
     if (event.type === "visit") {
       totals.visits += 1;
       bucket.visits += 1;
-    } else {
+    } else if (event.type === "whatsapp_click") {
       totals.whatsappContacts += 1;
       bucket.whatsappContacts += 1;
+    } else {
+      totals.instagramClicks += 1;
+      bucket.instagramClicks += 1;
     }
   }
 
@@ -221,17 +226,21 @@ export function evolutionSeries(
       : nowMs;
   }
 
-  const counts = new Map<string, { visits: number; whatsappContacts: number }>();
+  const counts = new Map<
+    string,
+    { visits: number; whatsappContacts: number; instagramClicks: number }
+  >();
   for (const event of events) {
     if (event.timestamp < sinceMs || event.timestamp > nowMs) continue;
     const key = bogotaBucketKey(event.timestamp, granularity);
     let bucket = counts.get(key);
     if (!bucket) {
-      bucket = { visits: 0, whatsappContacts: 0 };
+      bucket = { visits: 0, whatsappContacts: 0, instagramClicks: 0 };
       counts.set(key, bucket);
     }
     if (event.type === "visit") bucket.visits += 1;
-    else bucket.whatsappContacts += 1;
+    else if (event.type === "whatsapp_click") bucket.whatsappContacts += 1;
+    else bucket.instagramClicks += 1;
   }
 
   const keys =
@@ -243,6 +252,7 @@ export function evolutionSeries(
     bucket: key,
     visits: counts.get(key)?.visits ?? 0,
     whatsappContacts: counts.get(key)?.whatsappContacts ?? 0,
+    instagramClicks: counts.get(key)?.instagramClicks ?? 0,
   }));
 }
 
@@ -273,11 +283,16 @@ export type GlobalAggregatableEvent = AggregatableEvent & {
   commerceId: string;
 };
 
-/** One Commerce's line of the WhatsApp-contacts leaderboard. */
+/**
+ * One Commerce's line of the contacts leaderboard. Ranked by WhatsApp contacts
+ * (the monetisation pitch); the Instagram clicks ride along as a secondary,
+ * differentiated column.
+ */
 export type CommerceContactRank = {
   commerceId: string;
   name: string;
   whatsappContacts: number;
+  instagramClicks: number;
 };
 
 /** Count of Commerces in a given Estado. */
@@ -288,7 +303,7 @@ export type EstadoCount = {
 
 /** Everything the Super admin dashboard renders, aggregated AT READ. */
 export type GlobalStats = {
-  totals: { visits: number; whatsappContacts: number };
+  totals: { visits: number; whatsappContacts: number; instagramClicks: number };
   series: StatsBucket[];
   estadoBreakdown: EstadoCount[];
   ranking: CommerceContactRank[];
@@ -316,26 +331,38 @@ export function aggregateGlobalStats(
   // aggregations bucket by bucket — that IS the consistency guarantee.
   const global = aggregateEvents(events, granularity);
 
-  // Per-commerce WhatsApp-contact tallies for the leaderboard.
-  const contactsByCommerce = new Map<string, number>();
+  // Per-commerce click tallies for the leaderboard (both click kinds).
+  const clicksByCommerce = new Map<
+    string,
+    { whatsappContacts: number; instagramClicks: number }
+  >();
   for (const commerce of commerces) {
-    contactsByCommerce.set(commerce.commerceId, 0);
+    clicksByCommerce.set(commerce.commerceId, {
+      whatsappContacts: 0,
+      instagramClicks: 0,
+    });
   }
   for (const event of events) {
-    if (event.type !== "whatsapp_click") continue;
-    const current = contactsByCommerce.get(event.commerceId);
+    if (event.type === "visit") continue;
+    const current = clicksByCommerce.get(event.commerceId);
     // Only rank Commerces we know about (orphan Événements of a removed fiche
     // still count in the site-wide totals, but cannot be ranked).
     if (current === undefined) continue;
-    contactsByCommerce.set(event.commerceId, current + 1);
+    if (event.type === "whatsapp_click") current.whatsappContacts += 1;
+    else current.instagramClicks += 1;
   }
 
   const ranking: CommerceContactRank[] = commerces
     .map((commerce) => ({
       commerceId: commerce.commerceId,
       name: commerce.name,
-      whatsappContacts: contactsByCommerce.get(commerce.commerceId) ?? 0,
+      whatsappContacts:
+        clicksByCommerce.get(commerce.commerceId)?.whatsappContacts ?? 0,
+      instagramClicks:
+        clicksByCommerce.get(commerce.commerceId)?.instagramClicks ?? 0,
     }))
+    // Still ranked by WhatsApp contacts — the monetisation pitch. Instagram is
+    // a secondary column, not a ranking criterion.
     .sort(
       (a, b) =>
         b.whatsappContacts - a.whatsappContacts ||

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useQuery } from "convex/react";
 import {
+  IconBrandInstagram,
   IconBrandWhatsapp,
   IconBuildingStore,
   IconEye,
@@ -62,12 +63,12 @@ export function GlobalStatsView() {
       <div>
         <h1 className="text-2xl font-semibold">Estadísticas globales</h1>
         <p className="text-muted-foreground text-sm">
-          Actividad de todo el directorio: visitas, contactos por WhatsApp y los
-          negocios más contactados.
+          Actividad de todo el directorio: visitas, contactos por WhatsApp,
+          clics a Instagram y los negocios más contactados.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="Visitas"
           value={stats?.totals.visits ?? 0}
@@ -79,6 +80,12 @@ export function GlobalStatsView() {
           value={stats?.totals.whatsappContacts ?? 0}
           testId="global-stat-whatsapp-value"
           icon={<IconBrandWhatsapp className="size-5" />}
+        />
+        <StatCard
+          label="Clics a Instagram"
+          value={stats?.totals.instagramClicks ?? 0}
+          testId="global-stat-instagram-value"
+          icon={<IconBrandInstagram className="size-5" />}
         />
       </div>
 
@@ -163,7 +170,8 @@ export function GlobalStatsView() {
         <CardHeader className="pb-2">
           <CardTitle>Ranking de contactos por WhatsApp</CardTitle>
           <CardDescription>
-            Negocios ordenados por número de contactos por WhatsApp.
+            Negocios ordenados por número de contactos por WhatsApp, con sus
+            clics a Instagram como referencia.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -181,7 +189,8 @@ export function GlobalStatsView() {
                 <TableRow>
                   <TableHead className="w-12">#</TableHead>
                   <TableHead>Negocio</TableHead>
-                  <TableHead className="text-right">Contactos</TableHead>
+                  <TableHead className="text-right">WhatsApp</TableHead>
+                  <TableHead className="text-right">Instagram</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -193,6 +202,9 @@ export function GlobalStatsView() {
                     <TableCell className="font-medium">{entry.name}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {entry.whatsappContacts.toLocaleString("es-CO")}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-right tabular-nums">
+                      {entry.instagramClicks.toLocaleString("es-CO")}
                     </TableCell>
                   </TableRow>
                 ))}

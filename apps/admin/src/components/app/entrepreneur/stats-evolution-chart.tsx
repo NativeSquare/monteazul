@@ -17,6 +17,7 @@ type SeriesPoint = {
   bucket: string;
   visits: number;
   whatsappContacts: number;
+  instagramClicks: number;
 };
 
 const chartConfig = {
@@ -29,19 +30,27 @@ const chartConfig = {
     // WhatsApp brand green (design.md).
     color: "#25a35a",
   },
+  instagramClicks: {
+    label: "Clics a Instagram",
+    // Instagram brand magenta.
+    color: "#e1306c",
+  },
 } satisfies ChartConfig;
 
 /**
- * Evolution chart of the Estadísticas page: two areas (Visitas + Contactos por
- * WhatsApp) over the day/week/month buckets returned by the aggregation. The
- * recharts patterns mirror the template dashboard's interactive area chart.
+ * Evolution chart of the Estadísticas page: Visitas + Contactos por WhatsApp
+ * (+ Clics a Instagram when the fiche has a link — `showInstagram`) over the
+ * day/week/month buckets returned by the aggregation. The recharts patterns
+ * mirror the template dashboard's interactive area chart.
  */
 export function StatsEvolutionChart({
   series,
   period,
+  showInstagram = true,
 }: {
   series: SeriesPoint[];
   period: StatsPeriod;
+  showInstagram?: boolean;
 }) {
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-[260px] w-full">
@@ -60,6 +69,18 @@ export function StatsEvolutionChart({
             <stop
               offset="95%"
               stopColor="var(--color-whatsappContacts)"
+              stopOpacity={0.1}
+            />
+          </linearGradient>
+          <linearGradient id="fillInstagram" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor="var(--color-instagramClicks)"
+              stopOpacity={0.8}
+            />
+            <stop
+              offset="95%"
+              stopColor="var(--color-instagramClicks)"
               stopOpacity={0.1}
             />
           </linearGradient>
@@ -107,6 +128,15 @@ export function StatsEvolutionChart({
           fill="url(#fillWhatsapp)"
           stroke="var(--color-whatsappContacts)"
         />
+        {showInstagram ? (
+          <Area
+            dataKey="instagramClicks"
+            name="instagramClicks"
+            type="monotone"
+            fill="url(#fillInstagram)"
+            stroke="var(--color-instagramClicks)"
+          />
+        ) : null}
       </AreaChart>
     </ChartContainer>
   );

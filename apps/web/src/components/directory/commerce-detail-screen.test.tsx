@@ -74,6 +74,7 @@ type ClickArgs = { commerceId: string; visitorId: string };
 function renderDetail(result: DetailCommerce | null | undefined) {
   const recorded: ClickArgs[] = [];
   const visits: ClickArgs[] = [];
+  const instagramClicks: ClickArgs[] = [];
   const client = new ConvexReactClientFake();
   client.registerQueryFake(
     api.table.commerces.getPublicById,
@@ -86,6 +87,13 @@ function renderDetail(result: DetailCommerce | null | undefined) {
       return null;
     },
   );
+  client.registerMutationFake(
+    api.table.events.recordInstagramClick,
+    (args) => {
+      instagramClicks.push(args as ClickArgs);
+      return null;
+    },
+  );
   client.registerMutationFake(api.table.events.recordVisit, (args) => {
     visits.push(args as ClickArgs);
     return null;
@@ -93,7 +101,7 @@ function renderDetail(result: DetailCommerce | null | undefined) {
   const view = renderWithConvex(<CommerceDetailScreen id="commerce_1" />, {
     client,
   });
-  return { ...view, recorded, visits };
+  return { ...view, recorded, visits, instagramClicks };
 }
 
 describe("CommerceDetailScreen", () => {
@@ -166,6 +174,20 @@ describe("CommerceDetailScreen", () => {
   it("hides the « Redes » section entirely when the fiche has no Instagram", () => {
     renderDetail(makeCommerce({ instagram: undefined }));
     expect(screen.queryByText("Redes")).toBeNull();
+  });
+
+  it("records an anonymous instagram_click when the Instagram link is clicked", async () => {
+    const user = userEvent.setup();
+    const { instagramClicks, recorded } = renderDetail(makeCommerce());
+
+    await user.click(screen.getByRole("link", { name: "@sazon.abuela" }));
+
+    expect(instagramClicks).toHaveLength(1);
+    expect(instagramClicks[0].commerceId).toBe("commerce_1");
+    expect(typeof instagramClicks[0].visitorId).toBe("string");
+    expect(instagramClicks[0].visitorId.length).toBeGreaterThan(0);
+    // Separate metric — the WhatsApp counter is untouched.
+    expect(recorded).toHaveLength(0);
   });
 
   it("keeps the sticky WhatsApp CTA linking to wa.me (redirect works even if tracking fails)", () => {

@@ -63,12 +63,12 @@ describe("aggregateEvents", () => {
       ],
       "day",
     );
-    expect(totals).toEqual({ visits: 2, whatsappContacts: 3 });
+    expect(totals).toEqual({ visits: 2, whatsappContacts: 3, instagramClicks: 0 });
   });
 
   test("no events → zero totals and an empty series", () => {
     expect(aggregateEvents([], "day")).toEqual({
-      totals: { visits: 0, whatsappContacts: 0 },
+      totals: { visits: 0, whatsappContacts: 0, instagramClicks: 0 },
       series: [],
     });
   });
@@ -82,8 +82,8 @@ describe("aggregateEvents", () => {
       "day",
     );
     expect(series).toEqual([
-      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0 },
-      { bucket: "2026-07-06", visits: 1, whatsappContacts: 0 },
+      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
     ]);
   });
 
@@ -97,8 +97,8 @@ describe("aggregateEvents", () => {
       "day",
     );
     expect(series).toEqual([
-      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0 },
-      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1 },
+      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1, instagramClicks: 0 },
     ]);
   });
 
@@ -112,8 +112,8 @@ describe("aggregateEvents", () => {
       "week",
     );
     expect(series).toEqual([
-      { bucket: "2026-06-29", visits: 1, whatsappContacts: 0 },
-      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1 },
+      { bucket: "2026-06-29", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1, instagramClicks: 0 },
     ]);
   });
 
@@ -126,8 +126,8 @@ describe("aggregateEvents", () => {
       "month",
     );
     expect(series).toEqual([
-      { bucket: "2026-07", visits: 1, whatsappContacts: 0 },
-      { bucket: "2026-08", visits: 0, whatsappContacts: 1 },
+      { bucket: "2026-07", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-08", visits: 0, whatsappContacts: 1, instagramClicks: 0 },
     ]);
   });
 });
@@ -151,13 +151,13 @@ describe("evolutionSeries", () => {
       JUL6_11H, // now = 2026-07-06 11:00 Bogota
     );
     expect(series).toEqual([
-      { bucket: "2026-06-30", visits: 0, whatsappContacts: 0 },
-      { bucket: "2026-07-01", visits: 0, whatsappContacts: 0 },
-      { bucket: "2026-07-02", visits: 0, whatsappContacts: 0 },
-      { bucket: "2026-07-03", visits: 0, whatsappContacts: 0 },
-      { bucket: "2026-07-04", visits: 0, whatsappContacts: 0 },
-      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0 },
-      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1 },
+      { bucket: "2026-06-30", visits: 0, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-01", visits: 0, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-02", visits: 0, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-03", visits: 0, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-04", visits: 0, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1, instagramClicks: 0 },
     ]);
   });
 
@@ -184,6 +184,7 @@ describe("evolutionSeries", () => {
       bucket: "2026-07-06",
       visits: 1,
       whatsappContacts: 0,
+      instagramClicks: 0,
     });
   });
 
@@ -197,15 +198,15 @@ describe("evolutionSeries", () => {
       JUL6_11H,
     );
     expect(series).toEqual([
-      { bucket: "2026-06", visits: 1, whatsappContacts: 0 },
-      { bucket: "2026-07", visits: 0, whatsappContacts: 1 },
+      { bucket: "2026-06", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07", visits: 0, whatsappContacts: 1, instagramClicks: 0 },
     ]);
   });
 
   test("all: no events → a single bucket for the current month", () => {
     const series = evolutionSeries([], "all", JUL6_11H);
     expect(series).toEqual([
-      { bucket: "2026-07", visits: 0, whatsappContacts: 0 },
+      { bucket: "2026-07", visits: 0, whatsappContacts: 0, instagramClicks: 0 },
     ]);
   });
 });
@@ -239,7 +240,7 @@ describe("aggregateGlobalStats", () => {
 
   test("empty input → zero totals, empty series and leaderboard, all-zero estado breakdown", () => {
     const stats = aggregateGlobalStats([], [], "day");
-    expect(stats.totals).toEqual({ visits: 0, whatsappContacts: 0 });
+    expect(stats.totals).toEqual({ visits: 0, whatsappContacts: 0, instagramClicks: 0 });
     expect(stats.series).toEqual([]);
     expect(stats.ranking).toEqual([]);
     expect(stats.estadoBreakdown).toEqual([
@@ -255,7 +256,7 @@ describe("aggregateGlobalStats", () => {
       [visit(A), visit(A), contact(A), visit(B), contact(B), contact(B)],
       "day",
     );
-    expect(stats.totals).toEqual({ visits: 3, whatsappContacts: 3 });
+    expect(stats.totals).toEqual({ visits: 3, whatsappContacts: 3, instagramClicks: 0 });
   });
 
   test("global totals equal the sum of the per-commerce aggregations (consistency with #14)", () => {
@@ -270,7 +271,7 @@ describe("aggregateGlobalStats", () => {
     const global = aggregateGlobalStats(commerces, events, "day");
 
     // Re-derive per-commerce with the very module the entrepreneur page uses.
-    const sum = { visits: 0, whatsappContacts: 0 };
+    const sum = { visits: 0, whatsappContacts: 0, instagramClicks: 0 };
     for (const c of commerces) {
       const perCommerce = aggregateEvents(
         events
@@ -280,6 +281,7 @@ describe("aggregateGlobalStats", () => {
       );
       sum.visits += perCommerce.totals.visits;
       sum.whatsappContacts += perCommerce.totals.whatsappContacts;
+      sum.instagramClicks += perCommerce.totals.instagramClicks;
     }
     expect(global.totals).toEqual(sum);
   });
@@ -297,9 +299,9 @@ describe("aggregateGlobalStats", () => {
       "day",
     );
     expect(stats.ranking).toEqual([
-      { commerceId: B, name: "Bazar", whatsappContacts: 3 },
-      { commerceId: A, name: "Aromas", whatsappContacts: 1 },
-      { commerceId: C, name: "Cafetería", whatsappContacts: 0 },
+      { commerceId: B, name: "Bazar", whatsappContacts: 3, instagramClicks: 0 },
+      { commerceId: A, name: "Aromas", whatsappContacts: 1, instagramClicks: 0 },
+      { commerceId: C, name: "Cafetería", whatsappContacts: 0, instagramClicks: 0 },
     ]);
   });
 
@@ -346,8 +348,8 @@ describe("aggregateGlobalStats", () => {
       "day",
     );
     expect(stats.series).toEqual([
-      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0 },
-      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1 },
+      { bucket: "2026-07-05", visits: 1, whatsappContacts: 0, instagramClicks: 0 },
+      { bucket: "2026-07-06", visits: 1, whatsappContacts: 1, instagramClicks: 0 },
     ]);
   });
 });

@@ -157,11 +157,12 @@ describe("statsForCommerce — aggregation", () => {
     // is monthly and gap-filled up to the current month, so we assert the
     // data's own month is present (exact gap-fill length is time-dependent —
     // the day/week bucketing is pinned deterministically in lib/stats.test.ts).
-    expect(stats.totals).toEqual({ visits: 2, whatsappContacts: 1 });
+    expect(stats.totals).toEqual({ visits: 2, whatsappContacts: 1, instagramClicks: 0 });
     expect(stats.series).toContainEqual({
       bucket: "2026-07",
       visits: 2,
       whatsappContacts: 1,
+      instagramClicks: 0,
     });
   });
 
@@ -184,6 +185,6 @@ describe("statsForCommerce — aggregation", () => {
         period: "all",
       });
 
-    expect(stats.totals).toEqual({ visits: 1, whatsappContacts: 0 });
+    expect(stats.totals).toEqual({ visits: 1, whatsappContacts: 0, instagramClicks: 0 });
   });
 });

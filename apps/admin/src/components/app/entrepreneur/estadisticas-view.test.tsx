@@ -19,8 +19,9 @@ describe("EstadisticasView", () => {
   it("renders the Visitas and Contactos por WhatsApp totals", () => {
     const client = new ConvexReactClientFake();
     client.registerQueryFake(api.table.events.statsForCommerce, () => ({
-      totals: { visits: 42, whatsappContacts: 7 },
+      totals: { visits: 42, whatsappContacts: 7, instagramClicks: 0 },
       series: [],
+      hasInstagram: false,
     }));
 
     renderWithConvex(<EstadisticasView commerceId={commerceId} />, { client });
@@ -29,6 +30,22 @@ describe("EstadisticasView", () => {
     expect(screen.getByText("Contactos por WhatsApp")).toBeTruthy();
     expect(screen.getByTestId("stat-visitas-value").textContent).toBe("42");
     expect(screen.getByTestId("stat-whatsapp-value").textContent).toBe("7");
+    // No Instagram link on the fiche → the metric is hidden entirely.
+    expect(screen.queryByText("Clics a Instagram")).toBeNull();
+  });
+
+  it("shows the Clics a Instagram card ONLY when the fiche has a link", () => {
+    const client = new ConvexReactClientFake();
+    client.registerQueryFake(api.table.events.statsForCommerce, () => ({
+      totals: { visits: 42, whatsappContacts: 7, instagramClicks: 12 },
+      series: [],
+      hasInstagram: true,
+    }));
+
+    renderWithConvex(<EstadisticasView commerceId={commerceId} />, { client });
+
+    expect(screen.getByText("Clics a Instagram")).toBeTruthy();
+    expect(screen.getByTestId("stat-instagram-value").textContent).toBe("12");
   });
 
   it("re-queries with the chosen period when the selector changes", async () => {
@@ -36,9 +53,10 @@ describe("EstadisticasView", () => {
     const statsFake = vi.fn((args: { period: string }) => ({
       totals:
         args.period === "month"
-          ? { visits: 5, whatsappContacts: 2 }
-          : { visits: 42, whatsappContacts: 7 },
+          ? { visits: 5, whatsappContacts: 2, instagramClicks: 0 }
+          : { visits: 42, whatsappContacts: 7, instagramClicks: 0 },
       series: [],
+      hasInstagram: false,
     }));
     client.registerQueryFake(api.table.events.statsForCommerce, statsFake);
 
@@ -64,8 +82,11 @@ describe("EstadisticasView", () => {
   it("renders the evolution chart with the period selector when there is data", () => {
     const client = new ConvexReactClientFake();
     client.registerQueryFake(api.table.events.statsForCommerce, () => ({
-      totals: { visits: 3, whatsappContacts: 1 },
-      series: [{ bucket: "2026-07-06", visits: 3, whatsappContacts: 1 }],
+      totals: { visits: 3, whatsappContacts: 1, instagramClicks: 0 },
+      series: [
+        { bucket: "2026-07-06", visits: 3, whatsappContacts: 1, instagramClicks: 0 },
+      ],
+      hasInstagram: false,
     }));
 
     renderWithConvex(<EstadisticasView commerceId={commerceId} />, { client });
@@ -79,8 +100,9 @@ describe("EstadisticasView", () => {
   it("shows an empty state when there are no data points", () => {
     const client = new ConvexReactClientFake();
     client.registerQueryFake(api.table.events.statsForCommerce, () => ({
-      totals: { visits: 0, whatsappContacts: 0 },
+      totals: { visits: 0, whatsappContacts: 0, instagramClicks: 0 },
       series: [],
+      hasInstagram: false,
     }));
 
     renderWithConvex(<EstadisticasView commerceId={commerceId} />, { client });

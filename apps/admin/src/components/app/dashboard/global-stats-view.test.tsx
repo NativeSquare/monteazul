@@ -13,17 +13,24 @@ vi.mock("@/components/app/entrepreneur/stats-evolution-chart", () => ({
 }));
 
 const FULL = {
-  totals: { visits: 128, whatsappContacts: 34 },
-  series: [{ bucket: "2026-07-06", visits: 128, whatsappContacts: 34 }],
+  totals: { visits: 128, whatsappContacts: 34, instagramClicks: 11 },
+  series: [
+    {
+      bucket: "2026-07-06",
+      visits: 128,
+      whatsappContacts: 34,
+      instagramClicks: 11,
+    },
+  ],
   estadoBreakdown: [
     { estado: "pendiente" as const, count: 2 },
     { estado: "publicado" as const, count: 5 },
     { estado: "suspendido" as const, count: 1 },
   ],
   ranking: [
-    { commerceId: "b", name: "Bazar", whatsappContacts: 20 },
-    { commerceId: "a", name: "Aromas", whatsappContacts: 14 },
-    { commerceId: "c", name: "Cafetería", whatsappContacts: 0 },
+    { commerceId: "b", name: "Bazar", whatsappContacts: 20, instagramClicks: 8 },
+    { commerceId: "a", name: "Aromas", whatsappContacts: 14, instagramClicks: 0 },
+    { commerceId: "c", name: "Cafetería", whatsappContacts: 0, instagramClicks: 3 },
   ],
 };
 
@@ -39,6 +46,9 @@ describe("GlobalStatsView", () => {
     );
     expect(screen.getByTestId("global-stat-whatsapp-value").textContent).toBe(
       "34",
+    );
+    expect(screen.getByTestId("global-stat-instagram-value").textContent).toBe(
+      "11",
     );
   });
 
@@ -72,6 +82,8 @@ describe("GlobalStatsView", () => {
     expect(rows).toHaveLength(3);
     expect(rows[0].textContent).toContain("Bazar");
     expect(rows[0].textContent).toContain("20");
+    // The Instagram clicks ride along as a differentiated column.
+    expect(rows[0].textContent).toContain("8");
     expect(rows[1].textContent).toContain("Aromas");
     expect(rows[2].textContent).toContain("Cafetería");
   });
@@ -82,7 +94,7 @@ describe("GlobalStatsView", () => {
       ...FULL,
       totals:
         args.period === "month"
-          ? { visits: 9, whatsappContacts: 3 }
+          ? { visits: 9, whatsappContacts: 3, instagramClicks: 1 }
           : FULL.totals,
     }));
     client.registerQueryFake(api.table.adminStats.globalStats, fake);

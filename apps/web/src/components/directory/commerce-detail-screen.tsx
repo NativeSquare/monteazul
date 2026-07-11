@@ -17,6 +17,7 @@ import { FavoriteHeart } from "./favorite-heart";
 import { PhotoCarousel } from "./photo-carousel";
 import { StatusBadge } from "./status-badge";
 import { SubcategoryPill } from "./subcategory-pill";
+import { useInstagramClick } from "./use-instagram-click";
 import { useRecordVisit } from "./use-record-visit";
 import { useWhatsAppContact } from "./use-whatsapp-contact";
 import { WhatsAppGlyph } from "./whatsapp-button";
@@ -91,6 +92,7 @@ function DetailContent({
   const waHref = whatsAppLink(commerce.whatsapp);
   const ig = commerce.instagram ? instagramLink(commerce.instagram) : null;
   const contactWhatsApp = useWhatsAppContact();
+  const recordInstagramClick = useInstagramClick();
 
   return (
     <div className="mx-auto min-h-screen max-w-[480px] bg-surface pb-24 lg:max-w-5xl lg:pb-12">
@@ -189,6 +191,7 @@ function DetailContent({
                   href={ig.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => recordInstagramClick(commerce._id)}
                   className="flex items-center gap-2 rounded-[11px] border border-hairline-strong px-3.5 py-2.5 text-ink"
                 >
                   <Instagram

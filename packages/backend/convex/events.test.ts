@@ -130,6 +130,78 @@ describe("recordWhatsAppClick", () => {
   });
 });
 
+describe("recordInstagramClick", () => {
+  test("records raw instagram_click events with the same anonymous semantics as WhatsApp", async () => {
+    const t = convexTest(schema, modules);
+    const commerceId = await makeCommerce(t);
+
+    for (let i = 0; i < 3; i++) {
+      await t.mutation(api.table.events.recordInstagramClick, {
+        commerceId,
+        visitorId: "anon-visitor-1",
+      });
+    }
+
+    // Raw, never deduplicated: N clicks = N events, from the same visitor.
+    const events = await t.run((ctx) => ctx.db.query("events").collect());
+    expect(events).toHaveLength(3);
+    expect(events.every((e) => e.type === "instagram_click")).toBe(true);
+
+    // Only opaque, non-personal fields — exactly like a whatsapp_click.
+    const event = events[0] as Record<string, unknown>;
+    expect(Object.keys(event).sort()).toEqual([
+      "_creationTime",
+      "_id",
+      "commerceId",
+      "timestamp",
+      "type",
+      "visitorId",
+    ]);
+  });
+
+  test("instagram clicks land in their OWN stats total, separated from WhatsApp", async () => {
+    const t = convexTest(schema, modules);
+    const { commerceId, ownerId } = await makeCommerceWithOwner(t);
+    await t.run((ctx) => ctx.db.patch(commerceId, { instagram: "el.trigal" }));
+
+    await t.mutation(api.table.events.recordInstagramClick, {
+      commerceId,
+      visitorId: "anon-1",
+    });
+    await t.mutation(api.table.events.recordInstagramClick, {
+      commerceId,
+      visitorId: "anon-2",
+    });
+    await t.mutation(api.table.events.recordWhatsAppClick, {
+      commerceId,
+      visitorId: "anon-1",
+    });
+
+    const stats = await t
+      .withIdentity({ subject: ownerId })
+      .query(api.table.events.statsForCommerce, {
+        commerceId,
+        period: "all",
+      });
+    expect(stats.totals.instagramClicks).toBe(2);
+    expect(stats.totals.whatsappContacts).toBe(1);
+    expect(stats.hasInstagram).toBe(true);
+  });
+
+  test("statsForCommerce flags hasInstagram=false when the fiche has no link (the page hides the metric)", async () => {
+    const t = convexTest(schema, modules);
+    const { commerceId, ownerId } = await makeCommerceWithOwner(t);
+
+    const stats = await t
+      .withIdentity({ subject: ownerId })
+      .query(api.table.events.statsForCommerce, {
+        commerceId,
+        period: "all",
+      });
+    expect(stats.hasInstagram).toBe(false);
+  });
+});
+
 describe("recordVisit", () => {
   test("dedups the same visitor / same fiche / same day: N opens = 1 Visite", async () => {
     const t = convexTest(schema, modules);
