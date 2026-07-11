@@ -50,6 +50,8 @@ function makeCommerce(
     subcategories: ["Almuerzos y comida típica"],
     infoExtra: undefined,
     coverFocusY: undefined,
+    coverFocusX: undefined,
+    coverZoom: undefined,
     description: "Almuerzos caseros y comida típica colombiana.",
     whatsapp: "3001234567",
     photos: [],
@@ -152,11 +154,18 @@ describe("CommerceDetailScreen", () => {
     expect(screen.getAllByText("Disponible").length).toBeGreaterThan(0);
   });
 
-  it("renders the phone in « +57 XXX XXX XXXX » format and the Instagram link", () => {
+  it("renders « Redes » with the Instagram link and never shows the raw phone", () => {
     renderDetail(makeCommerce());
-    expect(screen.getByText("+57 300 123 4567")).toBeDefined();
+    expect(screen.getByText("Redes")).toBeDefined();
     const ig = screen.getByRole("link", { name: "@sazon.abuela" });
     expect(ig.getAttribute("href")).toBe("https://instagram.com/sazon.abuela");
+    // The number is redundant with the WhatsApp CTA — never displayed.
+    expect(screen.queryByText("+57 300 123 4567")).toBeNull();
+  });
+
+  it("hides the « Redes » section entirely when the fiche has no Instagram", () => {
+    renderDetail(makeCommerce({ instagram: undefined }));
+    expect(screen.queryByText("Redes")).toBeNull();
   });
 
   it("keeps the sticky WhatsApp CTA linking to wa.me (redirect works even if tracking fails)", () => {

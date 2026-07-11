@@ -6,6 +6,7 @@ import { Clock } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@packages/backend/convex/_generated/api";
 import { commerceStatus } from "@packages/backend/convex/lib/horario";
+import { coverCropStyle } from "@packages/shared/cover-crop";
 
 import { PHOTO_PLACEHOLDER_GRADIENT } from "@/lib/commerce-media";
 import { whatsAppLink } from "@/lib/commerce-contact";
@@ -69,8 +70,8 @@ function CommerceCard({
             fill
             sizes="(min-width: 1024px) 340px, 204px"
             className="object-cover"
-            // The owner-chosen vertical focal point of the cover crop.
-            style={{ objectPosition: `50% ${commerce.coverFocusY ?? 50}%` }}
+            // The owner-chosen framing (focal point + zoom) of the cover crop.
+            style={coverCropStyle(commerce)}
           />
         ) : null}
 

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Clock, Instagram, Phone, Store } from "lucide-react";
+import { ChevronLeft, Clock, Instagram, Store } from "lucide-react";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@packages/backend/convex/_generated/api";
@@ -12,11 +12,7 @@ import {
   weeklyScheduleRows,
 } from "@packages/backend/convex/lib/horario";
 
-import {
-  formatColombianPhone,
-  instagramLink,
-  whatsAppLink,
-} from "@/lib/commerce-contact";
+import { instagramLink, whatsAppLink } from "@/lib/commerce-contact";
 import { FavoriteHeart } from "./favorite-heart";
 import { PhotoCarousel } from "./photo-carousel";
 import { StatusBadge } from "./status-badge";
@@ -92,7 +88,6 @@ function DetailContent({
   const secondary = commerce.subcategories?.[0] ?? commerce.category;
   const status = commerce.horario ? commerceStatus(commerce.horario, now) : null;
   const schedule = horarioSchedule(commerce.horario);
-  const phone = formatColombianPhone(commerce.whatsapp);
   const waHref = whatsAppLink(commerce.whatsapp);
   const ig = commerce.instagram ? instagramLink(commerce.instagram) : null;
   const contactWhatsApp = useWhatsAppContact();
@@ -184,12 +179,12 @@ function DetailContent({
             </div>
           ) : null}
 
-          <div className="mt-5">
-            <div className="mb-[11px] text-sm font-bold text-ink">
-              Redes y contacto
-            </div>
-            <div className="flex flex-wrap gap-2.5">
-              {ig ? (
+          {/* « Redes » — Instagram only. The phone is deliberately NOT shown:
+              the WhatsApp CTA below is the single contact path. */}
+          {ig ? (
+            <div className="mt-5">
+              <div className="mb-[11px] text-sm font-bold text-ink">Redes</div>
+              <div className="flex flex-wrap gap-2.5">
                 <a
                   href={ig.href}
                   target="_blank"
@@ -202,13 +197,9 @@ function DetailContent({
                   />
                   <span className="text-[13px] font-semibold">{ig.handle}</span>
                 </a>
-              ) : null}
-              <div className="flex items-center gap-2 rounded-[11px] border border-hairline-strong px-3.5 py-2.5 text-ink">
-                <Phone className="size-[18px] text-primary" strokeWidth={2} />
-                <span className="text-[13px] font-semibold">{phone}</span>
               </div>
             </div>
-          </div>
+          ) : null}
 
           {/* WhatsApp CTA — a sticky bottom bar on mobile, an inline block at the
               end of the info column on desktop. A single anchor either way (the

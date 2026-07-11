@@ -167,11 +167,42 @@ function CarouselArrow({
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 
+type ViewState = { scale: number; tx: number; ty: number };
+
 /**
- * Full-screen photo viewer: object-contain (nothing cropped), previous/next
- * arrows, keyboard navigation (←/→/Escape) and a position counter. Desktop
- * gets real zoom — mouse wheel anchored at the cursor, +/− buttons, double
- * click to toggle, drag to pan while zoomed. Locks the page scroll while open.
+ * Rescale a view towards `targetScale` around a screen point, keeping that
+ * point visually anchored and the translation clamped to the photo bounds.
+ */
+function applyZoom(
+  prev: ViewState,
+  el: HTMLElement | null,
+  targetScale: number,
+  clientX?: number,
+  clientY?: number,
+): ViewState {
+  const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, targetScale));
+  if (scale === 1 || !el) return { scale, tx: 0, ty: 0 };
+  const rect = el.getBoundingClientRect();
+  // Anchor offset from the container centre (the transform origin).
+  const px = (clientX ?? rect.left + rect.width / 2) - rect.left - rect.width / 2;
+  const py = (clientY ?? rect.top + rect.height / 2) - rect.top - rect.height / 2;
+  const ratio = scale / prev.scale;
+  const maxX = ((scale - 1) * rect.width) / 2;
+  const maxY = ((scale - 1) * rect.height) / 2;
+  return {
+    scale,
+    tx: Math.max(-maxX, Math.min(maxX, px - ratio * (px - prev.tx))),
+    ty: Math.max(-maxY, Math.min(maxY, py - ratio * (py - prev.ty))),
+  };
+}
+
+/**
+ * Full-screen photo viewer: object-contain (nothing cropped), keyboard
+ * navigation (←/→/Escape), and a position counter in the corner. The controls
+ * split by device: touch navigates by swipe and zooms by pinch (no buttons,
+ * no arrows); fine pointers get overlay arrows, +/− buttons, wheel zoom
+ * anchored at the cursor and double click. Drag pans while zoomed either way.
+ * Locks the page scroll while open.
  */
 function PhotoViewer({
   name,
@@ -185,7 +216,7 @@ function PhotoViewer({
   onClose: () => void;
 }) {
   const [index, setIndex] = React.useState(initialIndex);
-  const [view, setView] = React.useState({ scale: 1, tx: 0, ty: 0 });
+  const [view, setView] = React.useState<ViewState>({ scale: 1, tx: 0, ty: 0 });
   const [isDragging, setIsDragging] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const drag = React.useRef<{
@@ -195,6 +226,13 @@ function PhotoViewer({
     ty: number;
     moved: boolean;
   } | null>(null);
+  // Live pointer positions — two of them make a pinch (touch zoom).
+  const pointers = React.useRef(new Map<number, { x: number; y: number }>());
+  const pinch = React.useRef<{ startDist: number; startScale: number } | null>(
+    null,
+  );
+  // Horizontal swipe navigation while NOT zoomed (touch).
+  const swipe = React.useRef<{ startX: number; startY: number } | null>(null);
   const count = photos.length;
 
   const goTo = React.useCallback(
@@ -205,29 +243,17 @@ function PhotoViewer({
     [count],
   );
 
-  /** Rescale around a screen point, keeping that point visually anchored. */
   const zoomBy = React.useCallback(
     (factor: number, clientX?: number, clientY?: number) => {
-      setView((prev) => {
-        const el = containerRef.current;
-        const scale = Math.max(
-          MIN_SCALE,
-          Math.min(MAX_SCALE, prev.scale * factor),
-        );
-        if (scale === 1 || !el) return { scale, tx: 0, ty: 0 };
-        const rect = el.getBoundingClientRect();
-        // Cursor offset from the container centre (the transform origin).
-        const px = (clientX ?? rect.left + rect.width / 2) - rect.left - rect.width / 2;
-        const py = (clientY ?? rect.top + rect.height / 2) - rect.top - rect.height / 2;
-        const ratio = scale / prev.scale;
-        const maxX = ((scale - 1) * rect.width) / 2;
-        const maxY = ((scale - 1) * rect.height) / 2;
-        return {
-          scale,
-          tx: Math.max(-maxX, Math.min(maxX, px - ratio * (px - prev.tx))),
-          ty: Math.max(-maxY, Math.min(maxY, py - ratio * (py - prev.ty))),
-        };
-      });
+      setView((prev) =>
+        applyZoom(
+          prev,
+          containerRef.current,
+          prev.scale * factor,
+          clientX,
+          clientY,
+        ),
+      );
     },
     [],
   );
@@ -265,19 +291,61 @@ function PhotoViewer({
   }, []);
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (view.scale === 1) return;
     event.currentTarget.setPointerCapture(event.pointerId);
-    setIsDragging(true);
-    drag.current = {
-      startX: event.clientX,
-      startY: event.clientY,
-      tx: view.tx,
-      ty: view.ty,
-      moved: false,
-    };
+    pointers.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    // A second finger turns the gesture into a pinch — drop pan/swipe.
+    if (pointers.current.size === 2) {
+      const [a, b] = [...pointers.current.values()];
+      pinch.current = {
+        startDist: Math.hypot(a.x - b.x, a.y - b.y),
+        startScale: view.scale,
+      };
+      drag.current = null;
+      swipe.current = null;
+      setIsDragging(false);
+      return;
+    }
+
+    if (view.scale > 1) {
+      setIsDragging(true);
+      drag.current = {
+        startX: event.clientX,
+        startY: event.clientY,
+        tx: view.tx,
+        ty: view.ty,
+        moved: false,
+      };
+    } else {
+      swipe.current = { startX: event.clientX, startY: event.clientY };
+    }
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const tracked = pointers.current.get(event.pointerId);
+    if (tracked) {
+      tracked.x = event.clientX;
+      tracked.y = event.clientY;
+    }
+
+    // Pinch: rescale around the midpoint of the two fingers.
+    if (pinch.current && pointers.current.size >= 2) {
+      const { startDist, startScale } = pinch.current;
+      if (startDist <= 0) return;
+      const [a, b] = [...pointers.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      const target = startScale * (dist / startDist);
+      const midX = (a.x + b.x) / 2;
+      const midY = (a.y + b.y) / 2;
+      setView((prev) =>
+        applyZoom(prev, containerRef.current, target, midX, midY),
+      );
+      return;
+    }
+
     const start = drag.current;
     const el = containerRef.current;
     if (!start || !el) return;
@@ -294,9 +362,29 @@ function PhotoViewer({
     }));
   }
 
-  function onPointerUp() {
+  function onPointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    pointers.current.delete(event.pointerId);
+
+    if (pinch.current) {
+      // End the pinch once fewer than two fingers remain; the leftover finger
+      // must not suddenly pan or swipe with a jump.
+      if (pointers.current.size < 2) pinch.current = null;
+      return;
+    }
+
     drag.current = null;
     setIsDragging(false);
+
+    const startedSwipe = swipe.current;
+    swipe.current = null;
+    if (startedSwipe && event.type !== "pointercancel") {
+      const dx = event.clientX - startedSwipe.startX;
+      const dy = event.clientY - startedSwipe.startY;
+      // A clearly horizontal flick navigates (touch has no arrows).
+      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        goTo(dx < 0 ? index + 1 : index - 1);
+      }
+    }
   }
 
   return (
@@ -310,8 +398,10 @@ function PhotoViewer({
     >
       <div
         ref={containerRef}
+        // touch-none: the viewer handles every touch itself (pinch to zoom,
+        // swipe to navigate) — the browser must not claim the gesture.
         className={cn(
-          "relative h-full w-full touch-pan-y overflow-hidden",
+          "relative h-full w-full touch-none overflow-hidden",
           view.scale > 1
             ? isDragging
               ? "cursor-grabbing"
@@ -358,12 +448,17 @@ function PhotoViewer({
         <X className="size-5" strokeWidth={2.4} />
       </button>
 
-      {/* Zoom controls — mainly for mouse users (wheel/double-click also work). */}
-      <div className="absolute left-4 top-4 flex gap-2">
+      {/* Zoom controls — fine pointers only (touch pinches instead). The
+          stopPropagation keeps the click off the backdrop, whose own click
+          closes the viewer — the buttons must ONLY change the zoom level. */}
+      <div className="absolute left-4 top-4 hidden gap-2 pointer-fine:flex">
         <button
           type="button"
           aria-label="Acercar"
-          onClick={() => zoomBy(1.5)}
+          onClick={(event) => {
+            event.stopPropagation();
+            zoomBy(1.5);
+          }}
           disabled={view.scale >= MAX_SCALE}
           className="flex size-[38px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm disabled:opacity-30"
         >
@@ -372,7 +467,10 @@ function PhotoViewer({
         <button
           type="button"
           aria-label="Alejar"
-          onClick={() => zoomBy(1 / 1.5)}
+          onClick={(event) => {
+            event.stopPropagation();
+            zoomBy(1 / 1.5);
+          }}
           disabled={view.scale <= MIN_SCALE}
           className="flex size-[38px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm disabled:opacity-30"
         >
@@ -380,6 +478,7 @@ function PhotoViewer({
         </button>
       </div>
 
+      {/* Navigation arrows — fine pointers only (touch swipes instead). */}
       {count > 1 ? (
         <>
           <button
@@ -391,7 +490,7 @@ function PhotoViewer({
             }}
             disabled={index === 0}
             className={cn(
-              "absolute left-3 top-1/2 flex size-[42px] -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm",
+              "absolute left-3 top-1/2 hidden size-[42px] -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm pointer-fine:flex",
               index === 0 && "pointer-events-none opacity-30",
             )}
           >
@@ -406,17 +505,23 @@ function PhotoViewer({
             }}
             disabled={index === count - 1}
             className={cn(
-              "absolute right-3 top-1/2 flex size-[42px] -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm",
+              "absolute right-3 top-1/2 hidden size-[42px] -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm pointer-fine:flex",
               index === count - 1 && "pointer-events-none opacity-30",
             )}
           >
             <ChevronRight className="size-6" strokeWidth={2.4} />
           </button>
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-pill bg-white/15 px-3 py-1 text-[13px] font-semibold text-white backdrop-blur-sm">
-            {index + 1} / {count}
-          </div>
         </>
       ) : null}
+
+      {/* Position counter — corner, always visible (on touch it is the only
+          hint of how many photos there are). */}
+      <div
+        data-testid="viewer-counter"
+        className="absolute bottom-4 left-4 rounded-pill bg-white/15 px-3 py-1 text-[13px] font-semibold text-white backdrop-blur-sm"
+      >
+        {index + 1}/{count}
+      </div>
     </div>
   );
 }

@@ -46,6 +46,8 @@ const commerce: DirectoryCommerce = {
   subcategories: ["Almuerzos y comida típica"],
   infoExtra: undefined,
   coverFocusY: undefined,
+  coverFocusX: undefined,
+  coverZoom: undefined,
   description: "Almuerzos caseros.",
   whatsapp: "3001234567",
   photos: [],

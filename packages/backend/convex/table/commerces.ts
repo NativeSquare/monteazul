@@ -5,6 +5,7 @@ import {
   COMMERCE_CATEGORIES,
   type CommerceCategory,
 } from "@packages/shared/categories";
+import { COVER_ZOOM_MAX, COVER_ZOOM_MIN } from "@packages/shared/cover-crop";
 import { defineTable } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
@@ -49,9 +50,13 @@ const documentSchema = {
   infoExtra: v.optional(v.string()),
   whatsapp: v.string(), // 10 digits, no +57
   photos: v.array(v.id("_storage")), // ordered
-  // Vertical focal point (0–100, % from the top) used to crop the FIRST photo
-  // as the card cover. Absent = centred (50).
+  // Framing of the FIRST photo's card crop (« Encuadre de la portada »):
+  // vertical / horizontal focal point (0–100, % from top / left; absent =
+  // centred) and zoom (percent, 100–250; absent = no zoom). Rendered by the
+  // shared `coverCropStyle` helper.
   coverFocusY: v.optional(v.number()),
+  coverFocusX: v.optional(v.number()),
+  coverZoom: v.optional(v.number()),
   // Admin-curated position of the fiche WITHIN its category on the public
   // listing (lower = first). Absent = after every ordered fiche, oldest first
   // — so a newly published fiche lands at the end of its category until the
@@ -131,6 +136,8 @@ export async function toPublicCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     whatsapp: doc.whatsapp,
     photos,
     coverFocusY: doc.coverFocusY,
+    coverFocusX: doc.coverFocusX,
+    coverZoom: doc.coverZoom,
     horario: doc.horario,
     // `torreApto` is deliberately NOT exposed: the tower/apartment is internal
     // context for the admin and the owner, never shown on the public fiche.
@@ -284,6 +291,8 @@ export async function toOwnerCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     whatsapp: doc.whatsapp,
     photos,
     coverFocusY: doc.coverFocusY,
+    coverFocusX: doc.coverFocusX,
+    coverZoom: doc.coverZoom,
     horario: doc.horario,
     torreApto: doc.torreApto,
     instagram: doc.instagram,
@@ -674,22 +683,47 @@ export const reorderPhotos = mutation({
 });
 
 /**
- * Set the vertical focal point (0–100, % from the top) used to crop the FIRST
- * photo as the listing-card cover. Owner-or-admin, like the other photo
- * mutations; the value is clamped server-side.
+ * Set the framing of the FIRST photo's listing-card crop (« Encuadre de la
+ * portada »): vertical / horizontal focal point (0–100) and/or zoom
+ * (100–{@link COVER_ZOOM_MAX} percent). Each axis is independent — only the
+ * given ones are patched, so a slider commits without touching the others.
+ * Owner-or-admin, like the other photo mutations; values are clamped
+ * server-side.
  */
 export const setCoverFocus = mutation({
   args: {
     commerceId: v.id("commerces"),
-    coverFocusY: v.number(),
+    coverFocusY: v.optional(v.number()),
+    coverFocusX: v.optional(v.number()),
+    coverZoom: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await requireCommerceOwnerOrAdmin(ctx, args.commerceId);
-    if (!Number.isFinite(args.coverFocusY)) {
+
+    function clamp(value: number | undefined, min: number, max: number) {
+      if (value === undefined) return undefined;
+      if (!Number.isFinite(value)) {
+        throw new ConvexError({ message: "El encuadre no es válido." });
+      }
+      return Math.min(max, Math.max(min, Math.round(value)));
+    }
+
+    const patch: {
+      coverFocusY?: number;
+      coverFocusX?: number;
+      coverZoom?: number;
+    } = {};
+    const coverFocusY = clamp(args.coverFocusY, 0, 100);
+    if (coverFocusY !== undefined) patch.coverFocusY = coverFocusY;
+    const coverFocusX = clamp(args.coverFocusX, 0, 100);
+    if (coverFocusX !== undefined) patch.coverFocusX = coverFocusX;
+    const coverZoom = clamp(args.coverZoom, COVER_ZOOM_MIN, COVER_ZOOM_MAX);
+    if (coverZoom !== undefined) patch.coverZoom = coverZoom;
+
+    if (Object.keys(patch).length === 0) {
       throw new ConvexError({ message: "El encuadre no es válido." });
     }
-    const clamped = Math.min(100, Math.max(0, Math.round(args.coverFocusY)));
-    await ctx.db.patch(args.commerceId, { coverFocusY: clamped });
+    await ctx.db.patch(args.commerceId, patch);
   },
 });
 

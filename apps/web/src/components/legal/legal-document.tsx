@@ -35,12 +35,20 @@ export function LegalDocument({ doc }: { doc: LegalDoc }) {
         </section>
       ))}
 
-      <div className="mt-10 border-t border-hairline pt-6">
+      {/* Reachable from the directory footer AND the sign-in consent links —
+          offer both ways back. */}
+      <div className="mt-10 flex flex-wrap gap-x-8 gap-y-2 border-t border-hairline pt-6">
         <Link
           href="/"
           className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
         >
           Volver al directorio
+        </Link>
+        <Link
+          href="/login"
+          className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          Volver al login
         </Link>
       </div>
     </main>

@@ -17,6 +17,10 @@
     "./dom-resilience": {
       "types": "./domResilience.d.ts",
       "default": "./domResilience.js"
+    },
+    "./cover-crop": {
+      "types": "./coverCrop.d.ts",
+      "default": "./coverCrop.js"
     }
   },
   "scripts": {

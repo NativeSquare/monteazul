@@ -58,6 +58,8 @@ async function toAdminCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     whatsapp: doc.whatsapp,
     photos,
     coverFocusY: doc.coverFocusY,
+    coverFocusX: doc.coverFocusX,
+    coverZoom: doc.coverZoom,
     horario: doc.horario,
     torreApto: doc.torreApto,
     instagram: doc.instagram,

@@ -477,4 +477,54 @@ describe("setCoverFocus — encuadre de la portada", () => {
     const doc = await t.run((ctx) => ctx.db.get(commerceId));
     expect(doc?.coverFocusY).toBe(60);
   });
+
+  test("los tres ejes son independientes: cada uno se fija sin tocar los otros", async () => {
+    const t = convexTest(schema, modules);
+    const ownerId = await makeUser(t, "owner-f3@example.com", "entreprise");
+    const commerceId = await makeCommerce(t, ownerId);
+    const asOwner = t.withIdentity({ subject: ownerId });
+
+    await asOwner.mutation(api.table.commerces.setCoverFocus, {
+      commerceId,
+      coverFocusY: 20,
+    });
+    await asOwner.mutation(api.table.commerces.setCoverFocus, {
+      commerceId,
+      coverFocusX: 80,
+    });
+    await asOwner.mutation(api.table.commerces.setCoverFocus, {
+      commerceId,
+      coverZoom: 150,
+    });
+
+    const doc = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(doc?.coverFocusY).toBe(20);
+    expect(doc?.coverFocusX).toBe(80);
+    expect(doc?.coverZoom).toBe(150);
+  });
+
+  test("el zoom queda acotado a [100, 250] y una llamada sin ejes se rechaza", async () => {
+    const t = convexTest(schema, modules);
+    const ownerId = await makeUser(t, "owner-f4@example.com", "entreprise");
+    const commerceId = await makeCommerce(t, ownerId);
+    const asOwner = t.withIdentity({ subject: ownerId });
+
+    await asOwner.mutation(api.table.commerces.setCoverFocus, {
+      commerceId,
+      coverZoom: 999,
+    });
+    let doc = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(doc?.coverZoom).toBe(250);
+
+    await asOwner.mutation(api.table.commerces.setCoverFocus, {
+      commerceId,
+      coverZoom: 10,
+    });
+    doc = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(doc?.coverZoom).toBe(100);
+
+    await expect(
+      asOwner.mutation(api.table.commerces.setCoverFocus, { commerceId }),
+    ).rejects.toThrow();
+  });
 });

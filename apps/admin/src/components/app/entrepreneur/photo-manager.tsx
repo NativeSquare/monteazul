@@ -25,6 +25,11 @@ import { GripVertical, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@packages/backend/convex/_generated/api";
 import { MAX_PHOTO_MB } from "@packages/backend/convex/lib/photos";
+import {
+  COVER_ZOOM_MAX,
+  COVER_ZOOM_MIN,
+  coverCropStyle,
+} from "@packages/shared/cover-crop";
 
 import { Button } from "@/components/ui/button";
 import { getConvexErrorMessage } from "@/utils/getConvexErrorMessage";
@@ -218,13 +223,17 @@ export function PhotoManager({ commerce }: { commerce: OwnerCommerce }) {
       )}
 
       {order.length > 0 && order[0].url ? (
-        <CoverFocusControl
+        <CoverFrameControl
           key={order[0].storageId}
           photoUrl={order[0].url}
-          initial={commerce.coverFocusY ?? 50}
-          onCommit={async (coverFocusY) => {
+          initial={{
+            coverFocusY: commerce.coverFocusY ?? 50,
+            coverFocusX: commerce.coverFocusX ?? 50,
+            coverZoom: commerce.coverZoom ?? COVER_ZOOM_MIN,
+          }}
+          onCommit={async (patch) => {
             try {
-              await setCoverFocus({ commerceId, coverFocusY });
+              await setCoverFocus({ commerceId, ...patch });
             } catch (error) {
               toast.error(getConvexErrorMessage(error));
             }
@@ -235,29 +244,73 @@ export function PhotoManager({ commerce }: { commerce: OwnerCommerce }) {
   );
 }
 
+type CoverFrameValues = {
+  coverFocusY: number;
+  coverFocusX: number;
+  coverZoom: number;
+};
+
 /**
- * « Encuadre de la portada »: pick which vertical band of the FIRST photo shows
- * in the listing-card crop. Live preview at the card's aspect; the value is
- * persisted when the drag ends (not on every tick).
+ * « Encuadre de la portada »: pick which part of the FIRST photo shows in the
+ * listing-card crop, on three axes — vertical, horizontal and zoom. Live
+ * preview at the card's aspect via the SAME shared style as the public card;
+ * each slider persists its own axis when the drag ends (not on every tick).
  */
-function CoverFocusControl({
+function CoverFrameControl({
   photoUrl,
   initial,
   onCommit,
 }: {
   photoUrl: string;
-  initial: number;
-  onCommit: (coverFocusY: number) => void;
+  initial: CoverFrameValues;
+  onCommit: (patch: Partial<CoverFrameValues>) => void;
 }) {
-  const [focusY, setFocusY] = React.useState(initial);
+  const [frame, setFrame] = React.useState(initial);
+
+  function slider(
+    key: keyof CoverFrameValues,
+    ariaLabel: string,
+    min: number,
+    max: number,
+    labels: [string, string],
+  ) {
+    return (
+      <div className="flex w-full max-w-[204px] items-center gap-2 sm:max-w-[248px]">
+        <span className="text-muted-foreground w-14 shrink-0 text-right text-[11px]">
+          {labels[0]}
+        </span>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={1}
+          value={frame[key]}
+          aria-label={ariaLabel}
+          onChange={(event) =>
+            setFrame((prev) => ({
+              ...prev,
+              [key]: Number(event.target.value),
+            }))
+          }
+          onPointerUp={() => onCommit({ [key]: frame[key] })}
+          onKeyUp={() => onCommit({ [key]: frame[key] })}
+          onBlur={() => onCommit({ [key]: frame[key] })}
+          className="accent-primary h-1.5 w-full cursor-pointer"
+        />
+        <span className="text-muted-foreground w-14 shrink-0 text-[11px]">
+          {labels[1]}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border p-3">
       <div>
         <p className="text-sm font-medium">Encuadre de la portada</p>
         <p className="text-muted-foreground text-xs">
-          Desliza para elegir qué franja de la primera foto se ve en la tarjeta
-          del directorio.
+          Desliza para elegir qué parte de la primera foto se ve en la tarjeta
+          del directorio: posición vertical, horizontal y tamaño.
         </p>
       </div>
       <div className="relative h-[132px] w-full max-w-[204px] overflow-hidden rounded-lg border sm:max-w-[248px]">
@@ -267,26 +320,24 @@ function CoverFocusControl({
           fill
           sizes="248px"
           className="object-cover"
-          style={{ objectPosition: `50% ${focusY}%` }}
+          style={coverCropStyle(frame)}
         />
       </div>
-      <div className="flex w-full max-w-[204px] items-center gap-2 sm:max-w-[248px]">
-        <span className="text-muted-foreground text-[11px]">Arriba</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={focusY}
-          aria-label="Encuadre vertical de la portada"
-          onChange={(event) => setFocusY(Number(event.target.value))}
-          onPointerUp={() => onCommit(focusY)}
-          onKeyUp={() => onCommit(focusY)}
-          onBlur={() => onCommit(focusY)}
-          className="accent-primary h-1.5 w-full cursor-pointer"
-        />
-        <span className="text-muted-foreground text-[11px]">Abajo</span>
-      </div>
+      {slider("coverFocusY", "Encuadre vertical de la portada", 0, 100, [
+        "Arriba",
+        "Abajo",
+      ])}
+      {slider("coverFocusX", "Encuadre horizontal de la portada", 0, 100, [
+        "Izquierda",
+        "Derecha",
+      ])}
+      {slider(
+        "coverZoom",
+        "Zoom de la portada",
+        COVER_ZOOM_MIN,
+        COVER_ZOOM_MAX,
+        ["Alejar", "Acercar"],
+      )}
     </div>
   );
 }

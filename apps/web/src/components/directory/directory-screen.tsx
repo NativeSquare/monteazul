@@ -85,7 +85,9 @@ export function DirectoryScreen() {
           <SearchBar value={queryText} onValueChange={setQueryText} />
         </div>
 
-        <div className="flex gap-1.5 overflow-x-auto px-3 pb-3.5 pt-0.5 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible lg:px-8">
+        {/* pt-2.5 leaves room for the active chip's halo (blur 12, offset 3):
+            the row is a scroll container, so it clips anything past its box. */}
+        <div className="flex gap-1.5 overflow-x-auto px-3 pb-3.5 pt-2.5 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible lg:px-8">
           {CATEGORY_CHIPS.map((chip) => (
             <CategoryChip
               key={chip.key}
