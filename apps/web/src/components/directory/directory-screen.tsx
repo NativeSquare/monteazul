@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 
@@ -113,26 +113,114 @@ export function DirectoryScreen() {
                   {countLabel(section.count)}
                 </span>
               </div>
-              {/* Horizontal snap-scroll on mobile; a wrapping multi-column grid
-                  on desktop so the cards fill the wide layout. `pl-4` insets the
-                  first card; `mr-4` narrows the scroll viewport so a peeking
-                  card is cut 16px before the screen edge (symmetric with the
-                  left) and the last card keeps its gutter when scrolled. Both
-                  are dropped in the desktop grid, where lg:px-8 takes over. */}
-              <div className="mr-4 flex snap-x gap-3.5 overflow-x-auto pb-1.5 pl-4 scroll-pl-4 [scrollbar-width:none] lg:mr-0 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:gap-y-6 lg:overflow-visible lg:px-8 xl:grid-cols-3 2xl:grid-cols-4">
-                {section.commerces.map((commerce) => (
-                  <CommerceCard
-                    key={commerce._id}
-                    commerce={commerce}
-                    now={now}
-                  />
-                ))}
-              </div>
+              {/* « Todos »: horizontal snap rows per category (with desktop
+                  arrows). A specific category: a plain vertical grid — with a
+                  single category on screen, scrolling down beats swiping. */}
+              {activeCategory === null ? (
+                <SectionRow>
+                  {section.commerces.map((commerce) => (
+                    <CommerceCard
+                      key={commerce._id}
+                      commerce={commerce}
+                      now={now}
+                    />
+                  ))}
+                </SectionRow>
+              ) : (
+                <div className="grid grid-cols-2 gap-x-3.5 gap-y-5 px-4 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-6 lg:px-8 xl:grid-cols-4">
+                  {section.commerces.map((commerce) => (
+                    <CommerceCard
+                      key={commerce._id}
+                      commerce={commerce}
+                      now={now}
+                      variant="grid"
+                    />
+                  ))}
+                </div>
+              )}
             </section>
           ))
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * One horizontal snap row of Commerce cards. `pl-4` insets the first card;
+ * `mr-4` narrows the scroll viewport so a peeking card is cut 16px before the
+ * screen edge; `scroll-pl-4` keeps the inset when snapping. On fine-pointer
+ * devices (mouse — no swipe gesture) overlay arrows page through the row,
+ * each shown only when there is content in its direction.
+ */
+function SectionRow({ children }: { children: React.ReactNode }) {
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const [canBack, setCanBack] = React.useState(false);
+  const [canForward, setCanForward] = React.useState(false);
+
+  const update = React.useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanBack(el.scrollLeft > 8);
+    setCanForward(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  }, []);
+
+  React.useEffect(() => {
+    update();
+    const el = scrollerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [update]);
+
+  function page(direction: 1 | -1) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: "smooth" });
+  }
+
+  return (
+    <div className="relative">
+      <div
+        ref={scrollerRef}
+        onScroll={update}
+        className="mr-4 flex snap-x gap-3.5 overflow-x-auto pb-1.5 pl-4 scroll-pl-4 [scrollbar-width:none] lg:mr-8 lg:pl-8 lg:scroll-pl-8"
+      >
+        {children}
+      </div>
+      {canBack ? <RowArrow direction="prev" onClick={() => page(-1)} /> : null}
+      {canForward ? (
+        <RowArrow direction="next" onClick={() => page(1)} />
+      ) : null}
+    </div>
+  );
+}
+
+function RowArrow({
+  direction,
+  onClick,
+}: {
+  direction: "prev" | "next";
+  onClick: () => void;
+}) {
+  const Icon = direction === "prev" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      aria-label={
+        direction === "prev"
+          ? "Desplazar hacia la izquierda"
+          : "Desplazar hacia la derecha"
+      }
+      onClick={onClick}
+      // top-[66px] centres the arrow on the photo band (h-[132px]).
+      className={`absolute top-[66px] hidden size-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-ink shadow-[0_2px_8px_rgba(20,30,50,0.18)] pointer-fine:flex ${
+        direction === "prev" ? "left-1.5 lg:left-4" : "right-1.5 lg:right-4"
+      }`}
+    >
+      <Icon className="size-5" strokeWidth={2.4} />
+    </button>
   );
 }
 

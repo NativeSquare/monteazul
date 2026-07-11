@@ -6,6 +6,7 @@ import { api } from "@packages/backend/convex/_generated/api";
 
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
@@ -54,10 +55,11 @@ export type CommerceFieldsValues = {
   name: string;
   category: string;
   description: string;
+  infoExtra?: string;
   whatsapp: string;
   torreApto?: string;
   instagram?: string;
-  contactName?: string;
+  contactName: string;
   resides: string;
   notas?: string;
 };
@@ -161,6 +163,25 @@ export function CommerceBasicsFields({
           </Field>
         )}
       />
+
+      <Controller
+        name="infoExtra"
+        control={control}
+        render={({ field }) => (
+          <Field>
+            <FieldLabel htmlFor="infoExtra">Información extra</FieldLabel>
+            <Textarea
+              {...field}
+              id="infoExtra"
+              rows={2}
+              placeholder="Métodos de pago, zonas de cobertura, envíos…"
+            />
+            <FieldDescription>
+              Se muestra al final de la ficha, como texto secundario.
+            </FieldDescription>
+          </Field>
+        )}
+      />
     </>
   );
 }
@@ -183,7 +204,7 @@ export function CommerceContactFields({
               {...field}
               id="whatsapp"
               inputMode="numeric"
-              placeholder="3182173887"
+              placeholder="3001234567"
               aria-invalid={fieldState.invalid}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -211,7 +232,7 @@ export function CommerceContactFields({
         control={control}
         render={({ field }) => (
           <Field>
-            <FieldLabel htmlFor="contactName">Nombre de contacto</FieldLabel>
+            <FieldLabel htmlFor="contactName">Nombre de contacto<RequiredMark /></FieldLabel>
             <Input {...field} id="contactName" />
           </Field>
         )}

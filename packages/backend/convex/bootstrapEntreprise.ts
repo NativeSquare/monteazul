@@ -40,6 +40,7 @@ export const bootstrapEntreprise = internalMutation({
     category: v.string(),
     subcategories: v.optional(v.array(v.string())),
     description: v.string(),
+    infoExtra: v.optional(v.string()),
     whatsapp: v.string(),
     horario: horarioValidator,
     torreApto: v.optional(v.string()),

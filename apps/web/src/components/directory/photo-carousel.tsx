@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { PHOTO_PLACEHOLDER_GRADIENT } from "@/lib/commerce-media";
@@ -11,10 +11,11 @@ import { PHOTO_PLACEHOLDER_GRADIENT } from "@/lib/commerce-media";
  * Swipeable photo carousel of the Commerce detail screen, faithful to the
  * Claude Design prototype: full-width horizontally-scrolling, snap-aligned
  * slides with position dots that track the active photo. On desktop (no touch
- * swipe) previous/next arrows overlay the photo. Tapping a photo opens a
- * full-screen viewer (object-contain, so nothing is cropped) with its own
- * navigation. When a Commerce has no photo yet, a single gradient placeholder
- * slide is shown (no dots, no arrows, no viewer).
+ * swipe) previous/next arrows overlay the photo. Every photo slide carries a
+ * zoom affordance (bottom-right) and opens a full-screen viewer
+ * (object-contain, so nothing is cropped) with wheel / double-click / pinchless
+ * pan-zoom for desktop. When a Commerce has no photo yet, a single gradient
+ * placeholder slide is shown (no dots, no arrows, no viewer).
  */
 export function PhotoCarousel({
   name,
@@ -78,6 +79,14 @@ export function PhotoCarousel({
                   className="object-cover"
                   priority={index === 0}
                 />
+                {/* Affordance: the photo opens full screen. Bottom-right — the
+                    heart sits top-right and the back button top-left. */}
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-3.5 right-3.5 flex size-9 items-center justify-center rounded-full bg-black/45 text-white"
+                >
+                  <ZoomIn className="size-[18px]" strokeWidth={2.2} />
+                </span>
               </button>
             ) : null}
           </div>
@@ -145,8 +154,6 @@ function CarouselArrow({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        // Bottom-anchored so it can never be confused with the top-left back
-        // button; hidden on mobile where swiping is the gesture.
         "absolute top-1/2 hidden size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-ink shadow-[0_2px_8px_rgba(20,30,50,0.18)] transition-opacity lg:flex",
         direction === "prev" ? "left-4" : "right-4",
         disabled && "pointer-events-none opacity-0",
@@ -157,10 +164,14 @@ function CarouselArrow({
   );
 }
 
+const MIN_SCALE = 1;
+const MAX_SCALE = 4;
+
 /**
- * Full-screen photo viewer: object-contain (nothing cropped), keyboard
- * navigation (←/→/Escape), previous/next arrows on every viewport and a
- * position counter. Locks the page scroll while open.
+ * Full-screen photo viewer: object-contain (nothing cropped), previous/next
+ * arrows, keyboard navigation (←/→/Escape) and a position counter. Desktop
+ * gets real zoom — mouse wheel anchored at the cursor, +/− buttons, double
+ * click to toggle, drag to pan while zoomed. Locks the page scroll while open.
  */
 function PhotoViewer({
   name,
@@ -174,23 +185,75 @@ function PhotoViewer({
   onClose: () => void;
 }) {
   const [index, setIndex] = React.useState(initialIndex);
+  const [view, setView] = React.useState({ scale: 1, tx: 0, ty: 0 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const drag = React.useRef<{
+    startX: number;
+    startY: number;
+    tx: number;
+    ty: number;
+    moved: boolean;
+  } | null>(null);
   const count = photos.length;
 
   const goTo = React.useCallback(
-    (next: number) => setIndex(Math.max(0, Math.min(count - 1, next))),
+    (next: number) => {
+      setIndex(Math.max(0, Math.min(count - 1, next)));
+      setView({ scale: 1, tx: 0, ty: 0 });
+    },
     [count],
+  );
+
+  /** Rescale around a screen point, keeping that point visually anchored. */
+  const zoomBy = React.useCallback(
+    (factor: number, clientX?: number, clientY?: number) => {
+      setView((prev) => {
+        const el = containerRef.current;
+        const scale = Math.max(
+          MIN_SCALE,
+          Math.min(MAX_SCALE, prev.scale * factor),
+        );
+        if (scale === 1 || !el) return { scale, tx: 0, ty: 0 };
+        const rect = el.getBoundingClientRect();
+        // Cursor offset from the container centre (the transform origin).
+        const px = (clientX ?? rect.left + rect.width / 2) - rect.left - rect.width / 2;
+        const py = (clientY ?? rect.top + rect.height / 2) - rect.top - rect.height / 2;
+        const ratio = scale / prev.scale;
+        const maxX = ((scale - 1) * rect.width) / 2;
+        const maxY = ((scale - 1) * rect.height) / 2;
+        return {
+          scale,
+          tx: Math.max(-maxX, Math.min(maxX, px - ratio * (px - prev.tx))),
+          ty: Math.max(-maxY, Math.min(maxY, py - ratio * (py - prev.ty))),
+        };
+      });
+    },
+    [],
   );
 
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
-      if (event.key === "ArrowLeft") setIndex((i) => Math.max(0, i - 1));
-      if (event.key === "ArrowRight")
-        setIndex((i) => Math.min(count - 1, i + 1));
+      if (event.key === "ArrowLeft") goTo(index - 1);
+      if (event.key === "ArrowRight") goTo(index + 1);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [count, onClose]);
+  }, [goTo, index, onClose]);
+
+  // Wheel zoom needs preventDefault, and React registers wheel listeners as
+  // passive — so attach a native, non-passive listener.
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    function onWheel(event: WheelEvent) {
+      event.preventDefault();
+      zoomBy(event.deltaY < 0 ? 1.25 : 0.8, event.clientX, event.clientY);
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [zoomBy]);
 
   // Lock the page scroll behind the viewer.
   React.useEffect(() => {
@@ -200,6 +263,41 @@ function PhotoViewer({
       document.body.style.overflow = previous;
     };
   }, []);
+
+  function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (view.scale === 1) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsDragging(true);
+    drag.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      tx: view.tx,
+      ty: view.ty,
+      moved: false,
+    };
+  }
+
+  function onPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const start = drag.current;
+    const el = containerRef.current;
+    if (!start || !el) return;
+    const rect = el.getBoundingClientRect();
+    const maxX = ((view.scale - 1) * rect.width) / 2;
+    const maxY = ((view.scale - 1) * rect.height) / 2;
+    const dx = event.clientX - start.startX;
+    const dy = event.clientY - start.startY;
+    if (Math.abs(dx) + Math.abs(dy) > 2) start.moved = true;
+    setView((prev) => ({
+      scale: prev.scale,
+      tx: Math.max(-maxX, Math.min(maxX, start.tx + dx)),
+      ty: Math.max(-maxY, Math.min(maxY, start.ty + dy)),
+    }));
+  }
+
+  function onPointerUp() {
+    drag.current = null;
+    setIsDragging(false);
+  }
 
   return (
     <div
@@ -211,17 +309,44 @@ function PhotoViewer({
       onClick={onClose}
     >
       <div
-        className="relative h-full w-full"
+        ref={containerRef}
+        className={cn(
+          "relative h-full w-full touch-pan-y overflow-hidden",
+          view.scale > 1
+            ? isDragging
+              ? "cursor-grabbing"
+              : "cursor-grab"
+            : "cursor-zoom-in",
+        )}
         onClick={(event) => event.stopPropagation()}
+        onDoubleClick={(event) =>
+          view.scale > 1
+            ? setView({ scale: 1, tx: 0, ty: 0 })
+            : zoomBy(2.5, event.clientX, event.clientY)
+        }
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
-        <Image
-          src={photos[index]}
-          alt={`${name} — foto ${index + 1} de ${count}`}
-          fill
-          sizes="100vw"
-          className="object-contain"
-          priority
-        />
+        <div
+          className="absolute inset-0"
+          style={{
+            transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`,
+            transformOrigin: "center center",
+            transition: isDragging ? undefined : "transform 120ms ease-out",
+          }}
+        >
+          <Image
+            src={photos[index]}
+            alt={`${name} — foto ${index + 1} de ${count}`}
+            fill
+            sizes="100vw"
+            className="select-none object-contain"
+            draggable={false}
+            priority
+          />
+        </div>
       </div>
 
       <button
@@ -232,6 +357,28 @@ function PhotoViewer({
       >
         <X className="size-5" strokeWidth={2.4} />
       </button>
+
+      {/* Zoom controls — mainly for mouse users (wheel/double-click also work). */}
+      <div className="absolute left-4 top-4 flex gap-2">
+        <button
+          type="button"
+          aria-label="Acercar"
+          onClick={() => zoomBy(1.5)}
+          disabled={view.scale >= MAX_SCALE}
+          className="flex size-[38px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm disabled:opacity-30"
+        >
+          <ZoomIn className="size-5" strokeWidth={2.2} />
+        </button>
+        <button
+          type="button"
+          aria-label="Alejar"
+          onClick={() => zoomBy(1 / 1.5)}
+          disabled={view.scale <= MIN_SCALE}
+          className="flex size-[38px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm disabled:opacity-30"
+        >
+          <ZoomOut className="size-5" strokeWidth={2.2} />
+        </button>
+      </div>
 
       {count > 1 ? (
         <>

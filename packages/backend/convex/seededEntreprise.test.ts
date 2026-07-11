@@ -26,7 +26,7 @@ const validFiche = {
   category: "Comida y bebida",
   subcategories: ["Panadería y repostería"],
   description: "Pan artesanal horneado a diario en el barrio.",
-  whatsapp: "3182173887",
+  whatsapp: "3001234567",
   horario: { mode: "semanal" as const, windows: [{ dayOfWeek: 1, from: 450, to: 960 }] },
   torreApto: "Torre 4 · Apto 926",
   instagram: "https://instagram.com/panaderiaelsol",
@@ -161,7 +161,7 @@ describe("createSeededEntreprise — cuenta y ficha", () => {
     expect(commerces).toHaveLength(1);
     expect(commerces[0].estado).toBe("publicado");
     expect(commerces[0].name).toBe("Panadería El Sol");
-    expect(commerces[0].whatsapp).toBe("3182173887");
+    expect(commerces[0].whatsapp).toBe("3001234567");
     // Champs internes conservés.
     expect(commerces[0].resides).toBe("Resido en Monteazul");
     // Haystack de recherche recalculé (accents pliés).
@@ -416,7 +416,7 @@ describe("createSeededEntreprise — validación de la ficha", () => {
       admin.mutation(api.table.seededEntreprise.createSeededEntreprise, {
         email: "wa@example.com",
         ...validFiche,
-        whatsapp: "+573182173887",
+        whatsapp: "+573001234567",
       }),
     ).rejects.toThrow(/whatsapp/i);
 

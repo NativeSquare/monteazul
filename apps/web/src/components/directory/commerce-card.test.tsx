@@ -36,7 +36,7 @@ vi.mock("./whatsapp-toast", async (importOriginal) => {
 });
 
 const WA_HREF =
-  "https://wa.me/573182173887?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul";
+  "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul";
 
 const commerce: DirectoryCommerce = {
   _id: "commerce_42" as unknown as Id<"commerces">,
@@ -44,8 +44,10 @@ const commerce: DirectoryCommerce = {
   name: "Sazón de la Abuela",
   category: "Comida y bebida",
   subcategories: ["Almuerzos y comida típica"],
+  infoExtra: undefined,
+  coverFocusY: undefined,
   description: "Almuerzos caseros.",
-  whatsapp: "3182173887",
+  whatsapp: "3001234567",
   photos: [],
   horario: {
     mode: "semanal",

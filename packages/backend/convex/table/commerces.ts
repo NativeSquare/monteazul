@@ -44,8 +44,14 @@ const documentSchema = {
   // `assertValidCommerce` (a schema validator cannot express the dependency).
   subcategories: v.optional(v.array(v.string())),
   description: v.string(),
+  // Optional public secondary info (payment methods, coverage, delivery…),
+  // shown ONLY on the detail fiche, never on the listing card.
+  infoExtra: v.optional(v.string()),
   whatsapp: v.string(), // 10 digits, no +57
   photos: v.array(v.id("_storage")), // ordered
+  // Vertical focal point (0–100, % from the top) used to crop the FIRST photo
+  // as the card cover. Absent = centred (50).
+  coverFocusY: v.optional(v.number()),
   horario: v.optional(horarioValidator),
   torreApto: v.optional(v.string()),
   instagram: v.optional(v.string()),
@@ -116,8 +122,10 @@ export async function toPublicCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     category: doc.category,
     subcategories: doc.subcategories,
     description: doc.description,
+    infoExtra: doc.infoExtra,
     whatsapp: doc.whatsapp,
     photos,
+    coverFocusY: doc.coverFocusY,
     horario: doc.horario,
     // `torreApto` is deliberately NOT exposed: the tower/apartment is internal
     // context for the admin and the owner, never shown on the public fiche.
@@ -258,8 +266,10 @@ export async function toOwnerCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     category: doc.category,
     subcategories: doc.subcategories,
     description: doc.description,
+    infoExtra: doc.infoExtra,
     whatsapp: doc.whatsapp,
     photos,
+    coverFocusY: doc.coverFocusY,
     horario: doc.horario,
     torreApto: doc.torreApto,
     instagram: doc.instagram,
@@ -367,6 +377,7 @@ export const submitCommerce = mutation({
     category: v.string(),
     subcategories: v.optional(v.array(v.string())),
     description: v.string(),
+    infoExtra: v.optional(v.string()),
     whatsapp: v.string(),
     horario: horarioValidator,
     torreApto: v.optional(v.string()),
@@ -466,6 +477,7 @@ export const updateMyCommerce = mutation({
     category: v.string(),
     subcategories: v.optional(v.array(v.string())),
     description: v.string(),
+    infoExtra: v.optional(v.string()),
     whatsapp: v.string(),
     horario: horarioValidator,
     torreApto: v.optional(v.string()),
@@ -644,6 +656,26 @@ export const reorderPhotos = mutation({
     }
 
     await ctx.db.patch(args.commerceId, { photos: args.photoIds });
+  },
+});
+
+/**
+ * Set the vertical focal point (0–100, % from the top) used to crop the FIRST
+ * photo as the listing-card cover. Owner-or-admin, like the other photo
+ * mutations; the value is clamped server-side.
+ */
+export const setCoverFocus = mutation({
+  args: {
+    commerceId: v.id("commerces"),
+    coverFocusY: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireCommerceOwnerOrAdmin(ctx, args.commerceId);
+    if (!Number.isFinite(args.coverFocusY)) {
+      throw new ConvexError({ message: "El encuadre no es válido." });
+    }
+    const clamped = Math.min(100, Math.max(0, Math.round(args.coverFocusY)));
+    await ctx.db.patch(args.commerceId, { coverFocusY: clamped });
   },
 });
 

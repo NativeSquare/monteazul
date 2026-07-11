@@ -4,6 +4,7 @@ import {
   type CommerceCategory,
 } from "@packages/shared/categories";
 import {
+  Ellipsis,
   HeartPulse,
   House,
   LayoutGrid,
@@ -21,9 +22,9 @@ import {
  * The colour/pastel/short-label tokens are the single source of truth in
  * `@packages/shared` (derived from `docs/product/design.md`); this module only
  * adds what is web-specific: the Lucide icon per chip and the "Todos" filter.
- * Only the seven categories with a documented chip token appear as chips —
- * `Inmuebles y servicios` and `Otro` are valid Commerce categories but, exactly
- * like the prototype, render only as list sections (no coloured filter chip).
+ * Only the categories with a chip token appear as chips — `Inmuebles y
+ * servicios` is a valid Commerce category but renders only as a list section
+ * (no coloured filter chip).
  */
 export type CategoryKey =
   | "todos"
@@ -33,7 +34,8 @@ export type CategoryKey =
   | "salud"
   | "ropa"
   | "hogar"
-  | "tecnologia";
+  | "tecnologia"
+  | "otro";
 
 export type CategoryChip = {
   key: CategoryKey;
@@ -61,6 +63,7 @@ const CHIP_ICONS: {
   { key: "ropa", category: "Accesorios y ropa", Icon: Shirt },
   { key: "hogar", category: "Hogar y artesanías", Icon: House },
   { key: "tecnologia", category: "Tecnología", Icon: Smartphone },
+  { key: "otro", category: "Otro", Icon: Ellipsis },
 ];
 
 export const CATEGORY_CHIPS: readonly CategoryChip[] = CHIP_ICONS.map(

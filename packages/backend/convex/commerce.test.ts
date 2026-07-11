@@ -7,7 +7,7 @@ import {
 
 const base = {
   category: "Comida y bebida" as const,
-  whatsapp: "3182173887",
+  whatsapp: "3001234567",
 };
 
 describe("assertValidCommerce — sub-categories", () => {
@@ -24,7 +24,7 @@ describe("assertValidCommerce — sub-categories", () => {
     expect(() =>
       assertValidCommerce({
         category: "Tecnología",
-        whatsapp: "3182173887",
+        whatsapp: "3001234567",
         subcategories: ["Otros"],
       }),
     ).toThrow(/comida y bebida/i);
@@ -47,7 +47,7 @@ describe("assertValidCommerce — sub-categories", () => {
 describe("assertValidCommerce — category & WhatsApp", () => {
   it("rejects an unknown category", () => {
     expect(() =>
-      assertValidCommerce({ category: "Restaurantes", whatsapp: "3182173887" }),
+      assertValidCommerce({ category: "Restaurantes", whatsapp: "3001234567" }),
     ).toThrow(/categor/i);
   });
 
@@ -56,7 +56,7 @@ describe("assertValidCommerce — category & WhatsApp", () => {
       assertValidCommerce({ ...base, whatsapp: "318217388" }),
     ).toThrow(/whatsapp/i);
     expect(() =>
-      assertValidCommerce({ ...base, whatsapp: "+573182173887" }),
+      assertValidCommerce({ ...base, whatsapp: "+573001234567" }),
     ).toThrow(/whatsapp/i);
     expect(() =>
       assertValidCommerce({ ...base, whatsapp: "318 217 3887" }),

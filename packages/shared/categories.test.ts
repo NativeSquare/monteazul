@@ -91,9 +91,13 @@ describe("@packages/shared Commerce taxonomy", () => {
     });
   });
 
-  it("carries chip tokens only for the seven documented categories (not Inmuebles/Otro)", () => {
-    expect(Object.keys(CATEGORY_CHIP_TOKENS)).toHaveLength(7);
+  it("carries chip tokens for the seven documented categories plus Otro (ronda 2 #2), not Inmuebles", () => {
+    expect(Object.keys(CATEGORY_CHIP_TOKENS)).toHaveLength(8);
+    expect(CATEGORY_CHIP_TOKENS["Otro"]).toEqual({
+      label: "Otros",
+      color: "#64748B",
+      pastel: "#EEF1F4",
+    });
     expect(CATEGORY_CHIP_TOKENS["Inmuebles y servicios"]).toBeUndefined();
-    expect(CATEGORY_CHIP_TOKENS["Otro"]).toBeUndefined();
   });
 });

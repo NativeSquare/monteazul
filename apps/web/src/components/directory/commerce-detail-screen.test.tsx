@@ -48,8 +48,10 @@ function makeCommerce(
     name: "Sazón de la Abuela",
     category: "Comida y bebida",
     subcategories: ["Almuerzos y comida típica"],
+    infoExtra: undefined,
+    coverFocusY: undefined,
     description: "Almuerzos caseros y comida típica colombiana.",
-    whatsapp: "3182173887",
+    whatsapp: "3001234567",
     photos: [],
     horario: {
       mode: "semanal",
@@ -119,6 +121,15 @@ describe("CommerceDetailScreen", () => {
     expect(screen.queryByText(/Torre 4/)).toBeNull();
   });
 
+  it("renders the infoExtra secondary block under the description when present", () => {
+    renderDetail(
+      makeCommerce({ infoExtra: "Pagos: efectivo o transferencia. Cobertura: Monteazul." }),
+    );
+    expect(
+      screen.getByText(/Pagos: efectivo o transferencia/),
+    ).toBeDefined();
+  });
+
   it("renders the Horario card as a per-day weekly schedule", () => {
     renderDetail(makeCommerce());
     expect(screen.getByText("Lunes")).toBeDefined();
@@ -143,7 +154,7 @@ describe("CommerceDetailScreen", () => {
 
   it("renders the phone in « +57 XXX XXX XXXX » format and the Instagram link", () => {
     renderDetail(makeCommerce());
-    expect(screen.getByText("+57 318 217 3887")).toBeDefined();
+    expect(screen.getByText("+57 300 123 4567")).toBeDefined();
     const ig = screen.getByRole("link", { name: "@sazon.abuela" });
     expect(ig.getAttribute("href")).toBe("https://instagram.com/sazon.abuela");
   });
@@ -152,7 +163,7 @@ describe("CommerceDetailScreen", () => {
     renderDetail(makeCommerce());
     const cta = screen.getByRole("link", { name: /Escribir por WhatsApp/ });
     expect(cta.getAttribute("href")).toBe(
-      "https://wa.me/573182173887?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul",
+      "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul",
     );
   });
 

@@ -35,7 +35,7 @@ async function insertCommerce(
       category,
       description,
       searchText: commerceSearchText({ name, category, description }),
-      whatsapp: "3182173887",
+      whatsapp: "3001234567",
       photos: [],
       estado: "publicado",
       resides: "Resido en Monteazul",

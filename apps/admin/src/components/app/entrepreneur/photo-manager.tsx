@@ -50,6 +50,7 @@ export function PhotoManager({ commerce }: { commerce: OwnerCommerce }) {
   const addPhoto = useMutation(api.table.commerces.addPhoto);
   const reorderPhotos = useMutation(api.table.commerces.reorderPhotos);
   const removePhoto = useMutation(api.table.commerces.removePhoto);
+  const setCoverFocus = useMutation(api.table.commerces.setCoverFocus);
 
   // Local mirror of the server order for optimistic drag-and-drop; re-synced
   // whenever the reactive query pushes a new order.
@@ -215,6 +216,77 @@ export function PhotoManager({ commerce }: { commerce: OwnerCommerce }) {
           </SortableContext>
         </DndContext>
       )}
+
+      {order.length > 0 && order[0].url ? (
+        <CoverFocusControl
+          key={order[0].storageId}
+          photoUrl={order[0].url}
+          initial={commerce.coverFocusY ?? 50}
+          onCommit={async (coverFocusY) => {
+            try {
+              await setCoverFocus({ commerceId, coverFocusY });
+            } catch (error) {
+              toast.error(getConvexErrorMessage(error));
+            }
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * « Encuadre de la portada »: pick which vertical band of the FIRST photo shows
+ * in the listing-card crop. Live preview at the card's aspect; the value is
+ * persisted when the drag ends (not on every tick).
+ */
+function CoverFocusControl({
+  photoUrl,
+  initial,
+  onCommit,
+}: {
+  photoUrl: string;
+  initial: number;
+  onCommit: (coverFocusY: number) => void;
+}) {
+  const [focusY, setFocusY] = React.useState(initial);
+
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border p-3">
+      <div>
+        <p className="text-sm font-medium">Encuadre de la portada</p>
+        <p className="text-muted-foreground text-xs">
+          Desliza para elegir qué franja de la primera foto se ve en la tarjeta
+          del directorio.
+        </p>
+      </div>
+      <div className="relative h-[132px] w-full max-w-[204px] overflow-hidden rounded-lg border sm:max-w-[248px]">
+        <Image
+          src={photoUrl}
+          alt="Vista previa de la portada"
+          fill
+          sizes="248px"
+          className="object-cover"
+          style={{ objectPosition: `50% ${focusY}%` }}
+        />
+      </div>
+      <div className="flex w-full max-w-[204px] items-center gap-2 sm:max-w-[248px]">
+        <span className="text-muted-foreground text-[11px]">Arriba</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={focusY}
+          aria-label="Encuadre vertical de la portada"
+          onChange={(event) => setFocusY(Number(event.target.value))}
+          onPointerUp={() => onCommit(focusY)}
+          onKeyUp={() => onCommit(focusY)}
+          onBlur={() => onCommit(focusY)}
+          className="accent-primary h-1.5 w-full cursor-pointer"
+        />
+        <span className="text-muted-foreground text-[11px]">Abajo</span>
+      </div>
     </div>
   );
 }

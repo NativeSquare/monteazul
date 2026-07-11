@@ -8,7 +8,7 @@ import {
 
 describe("formatColombianPhone", () => {
   it("formats a 10-digit number as « +57 XXX XXX XXXX »", () => {
-    expect(formatColombianPhone("3182173887")).toBe("+57 318 217 3887");
+    expect(formatColombianPhone("3001234567")).toBe("+57 300 123 4567");
   });
 
   it("returns the raw digits with the +57 prefix for unexpected lengths", () => {
@@ -19,8 +19,8 @@ describe("formatColombianPhone", () => {
 
 describe("whatsAppLink", () => {
   it("builds a wa.me link with the Colombia prefix and prefilled message", () => {
-    expect(whatsAppLink("3182173887")).toBe(
-      "https://wa.me/573182173887?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul",
+    expect(whatsAppLink("3001234567")).toBe(
+      "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul",
     );
   });
 });

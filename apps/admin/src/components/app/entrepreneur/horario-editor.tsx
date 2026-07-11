@@ -162,7 +162,12 @@ export function HorarioEditor({
 
   return (
     <div className="flex flex-col gap-3" data-slot="horario-editor">
-      <Label>Horario</Label>
+      <Label>
+        Horario
+        <span aria-hidden="true" className="text-destructive">
+          *
+        </span>
+      </Label>
       <RadioGroup
         className="flex gap-6"
         value={value.mode}

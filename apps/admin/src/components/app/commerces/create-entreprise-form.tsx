@@ -45,6 +45,7 @@ const formSchema = z.object({
   name: z.string().min(1, "El nombre del negocio es obligatorio."),
   category: z.string().min(1, "Selecciona una categoría."),
   description: z.string().min(1, "La descripción es obligatoria."),
+  infoExtra: z.string().optional(),
   whatsapp: z
     .string()
     .regex(
@@ -53,7 +54,7 @@ const formSchema = z.object({
     ),
   torreApto: z.string().optional(),
   instagram: z.string().optional(),
-  contactName: z.string().optional(),
+  contactName: z.string().min(1, "El nombre de contacto es obligatorio."),
   resides: z.string().min(1, "Indica si reside en Monteazul."),
   notas: z.string().optional(),
 });
@@ -101,6 +102,7 @@ export function CreateEntrepriseForm() {
       torreApto: "",
       instagram: "",
       contactName: "",
+      infoExtra: "",
       resides: "",
       notas: "",
     },
@@ -172,6 +174,7 @@ export function CreateEntrepriseForm() {
         category: data.category,
         subcategories: subcats.length > 0 ? subcats : undefined,
         description: data.description,
+        infoExtra: data.infoExtra || undefined,
         whatsapp: data.whatsapp,
         horario,
         torreApto: data.torreApto || undefined,

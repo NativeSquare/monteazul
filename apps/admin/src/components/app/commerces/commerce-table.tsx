@@ -108,6 +108,7 @@ export function CommerceTable() {
           <Table>
             <TableHeader className="bg-muted">
               <TableRow>
+                <TableHead className="w-10 text-muted-foreground">#</TableHead>
                 <TableHead>Negocio</TableHead>
                 <TableHead>Categoría</TableHead>
                 <TableHead>Estado</TableHead>
@@ -118,13 +119,16 @@ export function CommerceTable() {
             <TableBody>
               {commerces.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No hay negocios que coincidan con los filtros.
                   </TableCell>
                 </TableRow>
               ) : (
-                commerces.map((commerce) => (
+                commerces.map((commerce, index) => (
                   <TableRow key={commerce._id}>
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      {index + 1}
+                    </TableCell>
                     <TableCell className="font-medium">
                       {commerce.name}
                     </TableCell>

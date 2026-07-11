@@ -32,9 +32,12 @@ export type DirectoryCommerce = DirectorySection["commerces"][number];
 function CommerceCard({
   commerce,
   now,
+  variant = "row",
 }: {
   commerce: DirectoryCommerce;
   now: Date;
+  /** "row": fixed-width slide of a horizontal section; "grid": fills its cell. */
+  variant?: "row" | "grid";
 }) {
   const status = commerce.horario
     ? commerceStatus(commerce.horario, now)
@@ -49,7 +52,11 @@ function CommerceCard({
       href={`/negocio/${commerce._id}`}
       aria-label={commerce.name}
       data-slot="commerce-card"
-      className="block w-[204px] shrink-0 snap-start lg:w-full"
+      className={
+        variant === "grid"
+          ? "block w-full"
+          : "block w-[204px] shrink-0 snap-start lg:w-[248px]"
+      }
     >
       <div
         className="relative flex h-[132px] items-end overflow-hidden rounded-card p-2.5"
@@ -62,6 +69,8 @@ function CommerceCard({
             fill
             sizes="(min-width: 1024px) 340px, 204px"
             className="object-cover"
+            // The owner-chosen vertical focal point of the cover crop.
+            style={{ objectPosition: `50% ${commerce.coverFocusY ?? 50}%` }}
           />
         ) : null}
 
@@ -86,12 +95,17 @@ function CommerceCard({
           {commerce.name}
         </div>
         <div className="mt-[3px] text-xs text-ink-muted">{secondary}</div>
-        {status ? (
-          <div className="mt-[7px] flex items-center gap-[5px] text-[11.5px] font-medium text-ink-muted">
-            <Clock className="size-[13px] shrink-0" strokeWidth={2} />
-            {status.text}
-          </div>
-        ) : null}
+        {/* Two lines are always reserved (min-h) so every card of a row keeps
+            the same height and the WhatsApp button stays aligned; longer
+            horario texts are clamped with an ellipsis. */}
+        <div className="mt-[7px] flex min-h-8 items-start gap-[5px] text-[11.5px] font-medium leading-4 text-ink-muted">
+          {status ? (
+            <>
+              <Clock className="mt-px size-[13px] shrink-0" strokeWidth={2} />
+              <span className="line-clamp-2">{status.text}</span>
+            </>
+          ) : null}
+        </div>
         <WhatsAppButton
           size="sm"
           aria-label={`Escribir por WhatsApp a ${commerce.name}`}

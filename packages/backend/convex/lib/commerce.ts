@@ -147,6 +147,8 @@ export type CommerceFormInput = {
   category: string;
   subcategories?: string[];
   description: string;
+  /** Public secondary info (payment, coverage, delivery…) — detail fiche only. */
+  infoExtra?: string;
   whatsapp: string;
   // Optional: the schema stores `horario` as optional. The entrepreneur form
   // always provides one (its Convex arg is required), but the Notion import may
@@ -194,6 +196,7 @@ export function commerceWriteFields(input: CommerceFormInput) {
     category: input.category as CommerceCategory,
     subcategories,
     description: input.description,
+    infoExtra: input.infoExtra,
     whatsapp: input.whatsapp,
     horario: input.horario,
     torreApto: input.torreApto,

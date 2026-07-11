@@ -137,6 +137,14 @@ function DetailContent({
             {commerce.description}
           </p>
 
+          {/* Secondary info (payment, coverage, delivery…) — detail only,
+              deliberately quieter than the description. */}
+          {commerce.infoExtra ? (
+            <p className="mt-3 whitespace-pre-line text-[13px] leading-[1.55] text-ink-faint">
+              {commerce.infoExtra}
+            </p>
+          ) : null}
+
           {schedule && status ? (
             <div className="mt-6 rounded-card border border-hairline p-4">
               <div className="flex items-center gap-2 text-sm font-bold text-ink">

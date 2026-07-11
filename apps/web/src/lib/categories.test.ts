@@ -7,7 +7,7 @@ import {
 } from "./categories";
 
 describe("CATEGORY_CHIPS", () => {
-  it("exposes the Todos filter plus the seven documented categories in order", () => {
+  it("exposes the Todos filter plus the eight chip categories in order", () => {
     expect(CATEGORY_CHIPS.map((c) => c.key)).toEqual([
       "todos",
       "comida",
@@ -17,6 +17,7 @@ describe("CATEGORY_CHIPS", () => {
       "ropa",
       "hogar",
       "tecnologia",
+      "otro",
     ]);
   });
 

@@ -34,7 +34,7 @@ async function makeCommerce(
     ctx.db.insert("commerces", {
       ...base,
       searchText: commerceSearchText(base),
-      whatsapp: "3182173887",
+      whatsapp: "3001234567",
       photos: [],
       horario: { mode: "semanal", windows: [{ dayOfWeek: 1, from: 450, to: 960 }] },
       torreApto: "Torre 4 · Apto 926",
@@ -430,5 +430,51 @@ describe("generatePhotoUploadUrl — garde d'ownership", () => {
       .withIdentity({ subject: adminId })
       .mutation(api.table.commerces.generatePhotoUploadUrl, { commerceId });
     expect(typeof url).toBe("string");
+  });
+});
+
+describe("setCoverFocus — encuadre de la portada", () => {
+  test("el propietario fija el encuadre y el valor queda acotado a [0, 100]", async () => {
+    const t = convexTest(schema, modules);
+    const ownerId = await makeUser(t, "owner-focus@example.com", "entreprise");
+    const commerceId = await makeCommerce(t, ownerId);
+    const asOwner = t.withIdentity({ subject: ownerId });
+
+    await asOwner.mutation(api.table.commerces.setCoverFocus, {
+      commerceId,
+      coverFocusY: 25,
+    });
+    let doc = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(doc?.coverFocusY).toBe(25);
+
+    // Out-of-range values are clamped server-side, never rejected.
+    await asOwner.mutation(api.table.commerces.setCoverFocus, {
+      commerceId,
+      coverFocusY: 250,
+    });
+    doc = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(doc?.coverFocusY).toBe(100);
+  });
+
+  test("un tercero no puede fijar el encuadre; un admin sí", async () => {
+    const t = convexTest(schema, modules);
+    const ownerId = await makeUser(t, "owner-f2@example.com", "entreprise");
+    const intruderId = await makeUser(t, "intruso-f@example.com", "user");
+    const adminId = await makeUser(t, "admin-f@example.com", "admin");
+    const commerceId = await makeCommerce(t, ownerId);
+
+    await expect(
+      t.withIdentity({ subject: intruderId }).mutation(
+        api.table.commerces.setCoverFocus,
+        { commerceId, coverFocusY: 10 },
+      ),
+    ).rejects.toThrow();
+
+    await t.withIdentity({ subject: adminId }).mutation(
+      api.table.commerces.setCoverFocus,
+      { commerceId, coverFocusY: 60 },
+    );
+    const doc = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(doc?.coverFocusY).toBe(60);
   });
 });

@@ -15,7 +15,7 @@ const validArgs = {
   category: "Comida y bebida",
   subcategories: ["Panadería y repostería"],
   description: "Pan artesanal horneado a diario en el barrio.",
-  whatsapp: "3182173887",
+  whatsapp: "3001234567",
   horario: { mode: "semanal" as const, windows: [{ dayOfWeek: 1, from: 450, to: 960 }] },
   torreApto: "Torre 4 · Apto 926",
   instagram: "https://instagram.com/panaderiaelsol",
@@ -112,7 +112,7 @@ describe("submitCommerce — validation des champs", () => {
         .withIdentity({ subject: userId })
         .mutation(api.table.commerces.submitCommerce, {
           ...validArgs,
-          whatsapp: "+573182173887",
+          whatsapp: "+573001234567",
         }),
     ).rejects.toThrow(/whatsapp/i);
   });

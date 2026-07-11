@@ -65,7 +65,10 @@ function fillValidFiche() {
     target: { value: "Reparación de celulares y computadores." },
   });
   fireEvent.change(screen.getByLabelText(/whatsapp/i), {
-    target: { value: "3182173887" },
+    target: { value: "3001234567" },
+  });
+  fireEvent.change(screen.getByLabelText(/nombre de contacto/i), {
+    target: { value: "Ana García" },
   });
   fireEvent.change(screen.getByLabelText(/resides en monteazul/i), {
     target: { value: "Resido en Monteazul" },
@@ -94,7 +97,8 @@ describe("CreateEntrepriseForm", () => {
     expect(args.email).toBe("nuevo@example.com");
     expect(args.name).toBe("TecnoFix MZ");
     expect(args.category).toBe("Tecnología");
-    expect(args.whatsapp).toBe("3182173887");
+    expect(args.whatsapp).toBe("3001234567");
+    expect(args.contactName).toBe("Ana García");
 
     // La contraseña generada se muestra una vez al admin.
     await waitFor(() =>

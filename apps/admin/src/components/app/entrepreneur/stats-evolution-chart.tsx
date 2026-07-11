@@ -78,6 +78,8 @@ export function StatsEvolutionChart({
           axisLine={false}
           width={28}
           allowDecimals={false}
+          // Counts can never be negative — pin the axis at 0.
+          domain={[0, "auto"]}
         />
         <ChartTooltip
           cursor={false}
@@ -94,14 +96,14 @@ export function StatsEvolutionChart({
         <Area
           dataKey="visits"
           name="visits"
-          type="natural"
+          type="monotone"
           fill="url(#fillVisitas)"
           stroke="var(--color-visits)"
         />
         <Area
           dataKey="whatsappContacts"
           name="whatsappContacts"
-          type="natural"
+          type="monotone"
           fill="url(#fillWhatsapp)"
           stroke="var(--color-whatsappContacts)"
         />

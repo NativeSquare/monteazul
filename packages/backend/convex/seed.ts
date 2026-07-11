@@ -67,7 +67,7 @@ const SEED_COMMERCES: SeedCommerce[] = [
     subcategories: ["Almuerzos y comida típica"],
     description:
       "Almuerzos caseros y comida típica colombiana, preparados cada día con ingredientes frescos. Menú del día y pedidos para llevar.",
-    whatsapp: "3182173887",
+    whatsapp: "3001234567",
     horario: semanal("Lun – Vie", 690, 900),
     torreApto: "Torre 4 · Apto 926",
     instagram: "sazon.abuela",

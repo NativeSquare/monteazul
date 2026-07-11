@@ -8,13 +8,10 @@
  * base, per `docs/product/annuaire-spec.md` §3. Chip colours/pastels/short
  * labels come from `docs/product/design.md` (and the Claude Design prototype).
  *
- * Note — only seven categories carry a chip design token: those are the ones
- * documented in `docs/product/design.md` and rendered as filter chips in the
- * prototype (`Directorio Monteazul.dc.html`, whose colour map has exactly
- * Todos + 7 entries). `Inmuebles y servicios` and `Otro` are valid Commerce
- * categories but have no documented colour, so — faithfully to the prototype —
- * they appear only as list sections, never as coloured filter chips. Inventing
- * colours for them is out of scope (no undocumented product specs).
+ * Note — the prototype documented chip tokens for seven categories only.
+ * `Otro` gained a neutral token later at the product owner's request
+ * (correcciones ronda 2 #2). `Inmuebles y servicios` still has no token and
+ * appears only as a list section, never as a coloured filter chip.
  */
 
 /** The nine canonical Commerce categories, in display order. */
@@ -67,6 +64,7 @@ export const CATEGORY_CHIP_TOKENS = {
   "Accesorios y ropa": { label: "Ropa", color: "#5B62D6", pastel: "#E8E9FB" },
   "Hogar y artesanías": { label: "Hogar", color: "#C2922B", pastel: "#F6EEDA" },
   Tecnología: { label: "Tecnología", color: "#3D7FD1", pastel: "#E4EEFA" },
+  Otro: { label: "Otros", color: "#64748B", pastel: "#EEF1F4" },
 };
 
 /** True when the category may carry `Comida y bebida` sub-categories. */
