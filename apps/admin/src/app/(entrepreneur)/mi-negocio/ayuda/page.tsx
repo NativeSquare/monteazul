@@ -1,8 +1,8 @@
 import { IconLifebuoy } from "@tabler/icons-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// TODO: replace with the real support number once provided.
-const CONTACT_PHONE = "+57 000 000 0000";
+// The real support number, displayed on purpose (provided by the owner).
+const CONTACT_PHONE = "+57 319 416 5914";
 
 export default function AyudaPage() {
   return (
