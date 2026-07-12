@@ -30,6 +30,59 @@ function renderForm() {
   return renderWithConvex(<AccesoForm />, { client });
 }
 
+describe("AccesoForm — redirección por rol", () => {
+  it("retries currentUser until the fresh identity is visible, then routes the admin to /negocios", async () => {
+    const user = userEvent.setup();
+    signIn.mockReset().mockResolvedValue({ signingIn: true });
+    replace.mockReset();
+    const client = new ConvexReactClientFake();
+    // Simulate the auth race: right after signIn the connection is still
+    // anonymous (null), the NEXT read sees the admin.
+    let calls = 0;
+    client.registerQueryFake(api.table.users.currentUser, () => {
+      calls += 1;
+      return calls === 1
+        ? null
+        : {
+            _id: "user_1" as unknown as Id<"users">,
+            _creationTime: 0,
+            email: "admin@example.com",
+            role: "admin" as const,
+          };
+    });
+    renderWithConvex(<AccesoForm />, { client });
+
+    await user.type(screen.getByLabelText("Correo"), "admin@example.com");
+    await user.type(screen.getByLabelText("Contraseña"), "clave-admin");
+    fireEvent.submit(document.getElementById("form-acceso") as HTMLFormElement);
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/negocios"), {
+      timeout: 3000,
+    });
+    expect(calls).toBeGreaterThanOrEqual(2);
+  });
+
+  it("routes an entreprise account to /mi-negocio", async () => {
+    const user = userEvent.setup();
+    signIn.mockReset().mockResolvedValue({ signingIn: true });
+    replace.mockReset();
+    const client = new ConvexReactClientFake();
+    client.registerQueryFake(api.table.users.currentUser, () => ({
+      _id: "user_2" as unknown as Id<"users">,
+      _creationTime: 0,
+      email: "negocio@example.com",
+      role: "entreprise" as const,
+    }));
+    renderWithConvex(<AccesoForm />, { client });
+
+    await user.type(screen.getByLabelText("Correo"), "negocio@example.com");
+    await user.type(screen.getByLabelText("Contraseña"), "clave-negocio");
+    fireEvent.submit(document.getElementById("form-acceso") as HTMLFormElement);
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/mi-negocio"));
+  });
+});
+
 describe("AccesoForm — autofill de Chrome", () => {
   it("signs in with the values VISIBLE in the fields, not the stale form state", async () => {
     const user = userEvent.setup();

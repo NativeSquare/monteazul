@@ -3,6 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // The real support number, displayed on purpose (provided by the owner).
 const CONTACT_PHONE = "+57 319 416 5914";
+// wa.me wants only digits (country code included, no "+", no spaces).
+const WHATSAPP_HREF = `https://wa.me/${CONTACT_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(
+  "Hola, tengo una duda sobre mi negocio en Monteazul.",
+)}`;
 
 export default function AyudaPage() {
   return (
@@ -19,9 +23,12 @@ export default function AyudaPage() {
             Para cualquier solicitud o duda sobre tu negocio, contáctanos al
             siguiente número:
           </p>
+          {/* Opens a WhatsApp chat (a tel: link does nothing on desktop). */}
           <a
-            href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}
-            className="text-lg font-semibold text-primary hover:underline"
+            href={WHATSAPP_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-lg font-semibold text-primary underline underline-offset-4"
           >
             {CONTACT_PHONE}
           </a>

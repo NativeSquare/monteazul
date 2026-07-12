@@ -81,8 +81,17 @@ export function AccesoForm({ className, ...props }: React.ComponentProps<"div">)
       });
       if (signingIn) {
         // Route by role: a Super admin who signs in here still lands on the
-        // admin back-office (/team); everyone else goes to « Mi negocio ».
-        const me = await convex.query(api.table.users.currentUser);
+        // admin back-office; everyone else goes to « Mi negocio ».
+        //
+        // `signIn` resolves BEFORE the Convex client finishes re-authenticating
+        // its connection, so an immediate query can still run anonymously and
+        // return null — which used to send an admin to the entrepreneur flow.
+        // Poll briefly until the fresh identity is visible.
+        let me = await convex.query(api.table.users.currentUser);
+        for (let attempt = 0; me === null && attempt < 20; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 150));
+          me = await convex.query(api.table.users.currentUser);
+        }
         router.replace(me?.role === "admin" ? "/negocios" : "/mi-negocio");
       } else {
         router.replace(`/verificar?email=${encodeURIComponent(data.email)}`);
