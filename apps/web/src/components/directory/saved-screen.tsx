@@ -47,9 +47,9 @@ export function SavedScreen() {
       {me === undefined || saved === undefined ? (
         <LoadingGrid />
       ) : me === null ? (
-        <SignedOutState />
+        <SavedSignedOutState />
       ) : saved.length === 0 ? (
-        <EmptyState />
+        <SavedEmptyState />
       ) : (
         <div className="flex flex-wrap justify-center gap-x-3.5 gap-y-6 px-4 py-6">
           {saved.map((commerce) => (
@@ -74,7 +74,8 @@ function LoadingGrid() {
   );
 }
 
-function SignedOutState() {
+/** Shared with the « Guardados » chip of the directory (Ronda 8). */
+export function SavedSignedOutState() {
   return (
     <div className="px-8 py-[70px] text-center">
       <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-chip bg-muted text-ink-faint">
@@ -92,7 +93,8 @@ function SignedOutState() {
   );
 }
 
-function EmptyState() {
+/** Shared with the « Guardados » chip of the directory (Ronda 8). */
+export function SavedEmptyState() {
   return (
     <div className="px-8 py-[70px] text-center">
       <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-chip bg-muted text-ink-faint">

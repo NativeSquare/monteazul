@@ -16,6 +16,7 @@ import {
  */
 export type CategoryKey =
   | "todos"
+  | "guardados"
   | "comida"
   | "mascotas"
   | "belleza"
@@ -38,8 +39,13 @@ export type CategoryChip = {
 const CHIP_DEFS: {
   key: CategoryKey;
   category: CommerceCategory | null;
+  /** Explicit label for the chips that are NOT a Commerce category. */
+  label?: string;
 }[] = [
   { key: "todos", category: null },
+  // « Guardados » is not a Commerce category: it filters the directory down
+  // to the User's Favoris. Sits right of "Todos" (Ronda 8).
+  { key: "guardados", category: null, label: "Guardados" },
   { key: "comida", category: "Comida y bebida" },
   { key: "mascotas", category: "Mascotas" },
   { key: "belleza", category: "Belleza y cuidado personal" },
@@ -51,16 +57,17 @@ const CHIP_DEFS: {
 ];
 
 export const CATEGORY_CHIPS: readonly CategoryChip[] = CHIP_DEFS.map(
-  ({ key, category }) => {
+  ({ key, category, label }) => {
     const token =
       category === null ? TODOS_CHIP : CATEGORY_CHIP_TOKENS[category];
-    if (!token) {
+    const resolvedLabel = label ?? token?.label;
+    if (!resolvedLabel) {
       throw new Error(`Missing chip token for category: ${category}`);
     }
     return {
       key,
       category,
-      label: token.label,
+      label: resolvedLabel,
       icon: {
         light: `/categories/${key}-light.png`,
         navy: `/categories/${key}-navy.png`,

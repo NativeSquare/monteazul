@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 
+import { normalizeForSearch } from "@packages/backend/convex/lib/commerce";
+
 import {
   CATEGORY_CHIPS,
   CATEGORY_CHIP_BY_KEY,
@@ -17,6 +19,7 @@ import {
 } from "@/components/directory";
 import { AccountMenu } from "./account-menu";
 import { CommerceCard } from "./commerce-card";
+import { SavedEmptyState, SavedSignedOutState } from "./saved-screen";
 
 function countLabel(count: number): string {
   return count === 1 ? "1 negocio" : `${count} negocios`;
@@ -33,6 +36,7 @@ export function DirectoryScreen() {
   const [queryText, setQueryText] = React.useState("");
 
   const activeCategory = CATEGORY_CHIP_BY_KEY[activeKey].category;
+  const isGuardados = activeKey === "guardados";
   const trimmedQuery = queryText.trim();
 
   // Search (accent- and case-insensitive) resolves server-side against the
@@ -61,6 +65,23 @@ export function DirectoryScreen() {
   // name can't blow out the header), an anonymous Visiteur sees the app name.
   // `undefined` (auth loading) is treated as anonymous to avoid a greeting flash.
   const me = useQuery(api.table.users.currentUser);
+
+  // « Guardados » chip: the User's Favoris (publicado only, server-side).
+  // Subscribed only while the chip is active AND a session exists.
+  const saved = useQuery(
+    api.table.favorites.listMine,
+    isGuardados && me ? {} : "skip",
+  );
+  const savedFiltered = React.useMemo(() => {
+    if (saved === undefined) return undefined;
+    if (trimmedQuery.length === 0) return saved;
+    const needle = normalizeForSearch(trimmedQuery);
+    return saved.filter((commerce) =>
+      normalizeForSearch(
+        `${commerce.name} ${commerce.category} ${(commerce.subcategories ?? []).join(" ")} ${commerce.description}`,
+      ).includes(needle),
+    );
+  }, [saved, trimmedQuery]);
   const headerTitle = me
     ? me.name?.trim()
       ? `Bienvenido, ${me.name.trim()}`
@@ -100,7 +121,38 @@ export function DirectoryScreen() {
       </header>
 
       <div className="pb-7">
-        {sections === undefined ? (
+        {isGuardados ? (
+          me === null ? (
+            <SavedSignedOutState />
+          ) : me === undefined || savedFiltered === undefined ? (
+            <LoadingSections />
+          ) : (saved?.length ?? 0) === 0 ? (
+            <SavedEmptyState />
+          ) : savedFiltered.length === 0 ? (
+            <EmptyState query={queryText} />
+          ) : (
+            <section className="pb-0.5 pt-[18px]">
+              <div className="flex items-baseline justify-between px-4 pb-[11px] lg:px-8">
+                <span className="text-lg font-bold tracking-[-0.01em] text-ink">
+                  Guardados
+                </span>
+                <span className="text-xs font-medium text-ink-faint">
+                  {countLabel(savedFiltered.length)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3.5 gap-y-5 px-4 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-6 lg:px-8 xl:grid-cols-4">
+                {savedFiltered.map((commerce) => (
+                  <CommerceCard
+                    key={commerce._id}
+                    commerce={commerce}
+                    now={now}
+                    variant="grid"
+                  />
+                ))}
+              </div>
+            </section>
+          )
+        ) : sections === undefined ? (
           <LoadingSections />
         ) : sections.length === 0 ? (
           <EmptyState query={queryText} />

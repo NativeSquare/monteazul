@@ -5,9 +5,10 @@ import { describe, expect, it } from "vitest";
 import { CATEGORY_CHIPS, CATEGORY_CHIP_BY_KEY } from "./categories";
 
 describe("CATEGORY_CHIPS", () => {
-  it("exposes the Todos filter plus the eight chip categories in order", () => {
+  it("exposes Todos, then Guardados, then the eight chip categories in order", () => {
     expect(CATEGORY_CHIPS.map((c) => c.key)).toEqual([
       "todos",
+      "guardados",
       "comida",
       "mascotas",
       "belleza",
@@ -21,6 +22,9 @@ describe("CATEGORY_CHIPS", () => {
 
   it("binds each real chip to its canonical Spanish Commerce category, and Todos to none", () => {
     expect(CATEGORY_CHIP_BY_KEY.todos.category).toBeNull();
+    // « Guardados » is a favorites filter, not a Commerce category.
+    expect(CATEGORY_CHIP_BY_KEY.guardados.category).toBeNull();
+    expect(CATEGORY_CHIP_BY_KEY.guardados.label).toBe("Guardados");
     expect(CATEGORY_CHIP_BY_KEY.comida.category).toBe("Comida y bebida");
     expect(CATEGORY_CHIP_BY_KEY.belleza.category).toBe("Belleza y cuidado personal");
     expect(CATEGORY_CHIP_BY_KEY.ropa.category).toBe("Accesorios y ropa");
