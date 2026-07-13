@@ -394,6 +394,22 @@ export async function validatedPhotoAttachments(
  * validated by `validatedPhotoAttachments`; their order is the vitrine order
  * (first = Portada).
  */
+/**
+ * Clamp one optional axis of the cover framing (shared by `submitCommerce`
+ * and `setCoverFocus`). Absent stays absent; a non-finite value is rejected.
+ */
+function clampCoverAxis(
+  value: number | undefined,
+  min: number,
+  max: number,
+): number | undefined {
+  if (value === undefined) return undefined;
+  if (!Number.isFinite(value)) {
+    throw new ConvexError({ message: "El encuadre no es válido." });
+  }
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
 export const submitCommerce = mutation({
   args: {
     name: v.string(),
@@ -409,6 +425,11 @@ export const submitCommerce = mutation({
     resides: v.string(),
     notas: v.optional(v.string()),
     photos: v.optional(v.array(submittedPhotoValidator)),
+    // Cover framing chosen in the wizard BEFORE the fiche exists (the edit
+    // flows go through `setCoverFocus` instead). Same clamps.
+    coverFocusY: v.optional(v.number()),
+    coverFocusX: v.optional(v.number()),
+    coverZoom: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { userId, user } = await requireAuthenticated(ctx);
@@ -439,6 +460,9 @@ export const submitCommerce = mutation({
     const commerceId = await ctx.db.insert("commerces", {
       ...commerceWriteFields(args),
       photos,
+      coverFocusY: clampCoverAxis(args.coverFocusY, 0, 100),
+      coverFocusX: clampCoverAxis(args.coverFocusX, 0, 100),
+      coverZoom: clampCoverAxis(args.coverZoom, COVER_ZOOM_MIN, COVER_ZOOM_MAX),
       estado: "pendiente",
       ownerId: userId,
     });
@@ -700,24 +724,20 @@ export const setCoverFocus = mutation({
   handler: async (ctx, args) => {
     await requireCommerceOwnerOrAdmin(ctx, args.commerceId);
 
-    function clamp(value: number | undefined, min: number, max: number) {
-      if (value === undefined) return undefined;
-      if (!Number.isFinite(value)) {
-        throw new ConvexError({ message: "El encuadre no es válido." });
-      }
-      return Math.min(max, Math.max(min, Math.round(value)));
-    }
-
     const patch: {
       coverFocusY?: number;
       coverFocusX?: number;
       coverZoom?: number;
     } = {};
-    const coverFocusY = clamp(args.coverFocusY, 0, 100);
+    const coverFocusY = clampCoverAxis(args.coverFocusY, 0, 100);
     if (coverFocusY !== undefined) patch.coverFocusY = coverFocusY;
-    const coverFocusX = clamp(args.coverFocusX, 0, 100);
+    const coverFocusX = clampCoverAxis(args.coverFocusX, 0, 100);
     if (coverFocusX !== undefined) patch.coverFocusX = coverFocusX;
-    const coverZoom = clamp(args.coverZoom, COVER_ZOOM_MIN, COVER_ZOOM_MAX);
+    const coverZoom = clampCoverAxis(
+      args.coverZoom,
+      COVER_ZOOM_MIN,
+      COVER_ZOOM_MAX,
+    );
     if (coverZoom !== undefined) patch.coverZoom = coverZoom;
 
     if (Object.keys(patch).length === 0) {

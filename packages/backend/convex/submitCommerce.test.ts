@@ -71,6 +71,37 @@ describe("submitCommerce — création de la fiche et attribution du rôle", () 
     ).rejects.toThrow();
   });
 
+  test("persiste el encuadre de portada elegido en el wizard, con clamps (Ronda 9)", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await makeAccount(t, "encuadre@example.com");
+
+    const commerceId = await t
+      .withIdentity({ subject: userId })
+      .mutation(api.table.commerces.submitCommerce, {
+        ...validArgs,
+        coverFocusY: 30,
+        coverFocusX: 999, // out of range → clamped to 100
+        coverZoom: 175,
+      });
+
+    const commerce = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(commerce?.coverFocusY).toBe(30);
+    expect(commerce?.coverFocusX).toBe(100);
+    expect(commerce?.coverZoom).toBe(175);
+  });
+
+  test("sin encuadre en el submit, los tres ejes quedan ausentes (recorte centrado)", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await makeAccount(t, "sin-encuadre@example.com");
+    const commerceId = await t
+      .withIdentity({ subject: userId })
+      .mutation(api.table.commerces.submitCommerce, validArgs);
+    const commerce = await t.run((ctx) => ctx.db.get(commerceId));
+    expect(commerce?.coverFocusY).toBeUndefined();
+    expect(commerce?.coverFocusX).toBeUndefined();
+    expect(commerce?.coverZoom).toBeUndefined();
+  });
+
   test("persiste l'Horario en mode « semanal »", async () => {
     const t = convexTest(schema, modules);
     const userId = await makeAccount(t, "semanal@example.com");

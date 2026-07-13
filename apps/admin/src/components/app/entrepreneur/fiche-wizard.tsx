@@ -37,9 +37,14 @@ import {
   type PickedPhoto,
 } from "@/components/app/entrepreneur/photo-picker";
 import {
+  CoverFrameControl,
+  type CoverFrameValues,
+} from "@/components/app/entrepreneur/cover-frame-control";
+import {
   uploadCompressedPhoto,
   type UploadedPhoto,
 } from "@/lib/photo-upload";
+import { COVER_ZOOM_MIN } from "@packages/shared/cover-crop";
 
 const formSchema = z.object({
   name: z.string().min(1, "El nombre del negocio es obligatorio."),
@@ -84,6 +89,13 @@ export function FicheWizard() {
   const [horario, setHorario] = React.useState<Horario>(DEFAULT_HORARIO);
   const [horarioError, setHorarioError] = React.useState<string | null>(null);
   const [photos, setPhotos] = React.useState<PickedPhoto[]>([]);
+  // Cover framing chosen BEFORE the fiche exists — kept locally and persisted
+  // with `submitCommerce` (the edit flows persist through `setCoverFocus`).
+  const [coverFrame, setCoverFrame] = React.useState<CoverFrameValues>({
+    coverFocusY: 50,
+    coverFocusX: 50,
+    coverZoom: COVER_ZOOM_MIN,
+  });
   const [formError, setFormError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -165,6 +177,7 @@ export function FicheWizard() {
         resides: data.resides,
         notas: data.notas || undefined,
         photos: photoIds.length > 0 ? photoIds : undefined,
+        ...(photoIds.length > 0 ? coverFrame : {}),
       });
       router.push("/mi-negocio");
     } catch (error) {
@@ -286,8 +299,20 @@ export function FicheWizard() {
               Fotos del negocio
             </SectionTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col gap-4">
             <PhotoPicker value={photos} onChange={setPhotos} />
+            {/* Framing available from the FIRST picked photo — the wizard must
+                offer the same adjustment as the edit flows (Ronda 9). */}
+            {photos.length > 0 ? (
+              <CoverFrameControl
+                key={photos[0].id}
+                photoUrl={photos[0].previewUrl}
+                initial={coverFrame}
+                onCommit={(patch) =>
+                  setCoverFrame((prev) => ({ ...prev, ...patch }))
+                }
+              />
+            ) : null}
           </CardContent>
         </Card>
 
