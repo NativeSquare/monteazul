@@ -9,6 +9,9 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as bootstrapAdmin from "../bootstrapAdmin.js";
+import type * as bootstrapEntreprise from "../bootstrapEntreprise.js";
+import type * as cleanupOrphanAccount from "../cleanupOrphanAccount.js";
 import type * as crons from "../crons.js";
 import type * as emails from "../emails.js";
 import type * as http from "../http.js";
@@ -28,6 +31,7 @@ import type * as lib_tracking from "../lib/tracking.js";
 import type * as migrations from "../migrations.js";
 import type * as notionImport from "../notionImport.js";
 import type * as rbac from "../rbac.js";
+import type * as resetTracking from "../resetTracking.js";
 import type * as seed from "../seed.js";
 import type * as storage from "../storage.js";
 import type * as table_admin from "../table/admin.js";
@@ -39,6 +43,7 @@ import type * as table_events from "../table/events.js";
 import type * as table_favorites from "../table/favorites.js";
 import type * as table_feedback from "../table/feedback.js";
 import type * as table_seededEntreprise from "../table/seededEntreprise.js";
+import type * as table_siteVisits from "../table/siteVisits.js";
 import type * as table_users from "../table/users.js";
 import type * as utils_generateFunctions from "../utils/generateFunctions.js";
 
@@ -50,6 +55,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  bootstrapAdmin: typeof bootstrapAdmin;
+  bootstrapEntreprise: typeof bootstrapEntreprise;
+  cleanupOrphanAccount: typeof cleanupOrphanAccount;
   crons: typeof crons;
   emails: typeof emails;
   http: typeof http;
@@ -69,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   notionImport: typeof notionImport;
   rbac: typeof rbac;
+  resetTracking: typeof resetTracking;
   seed: typeof seed;
   storage: typeof storage;
   "table/admin": typeof table_admin;
@@ -80,6 +89,7 @@ declare const fullApi: ApiFromModules<{
   "table/favorites": typeof table_favorites;
   "table/feedback": typeof table_feedback;
   "table/seededEntreprise": typeof table_seededEntreprise;
+  "table/siteVisits": typeof table_siteVisits;
   "table/users": typeof table_users;
   "utils/generateFunctions": typeof utils_generateFunctions;
 }>;
