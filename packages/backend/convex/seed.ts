@@ -1,7 +1,7 @@
 import type { CommerceCategory } from "@packages/shared/categories";
 import { internalMutation } from "./_generated/server";
 import { assertValidCommerce, commerceSearchText } from "./lib/commerce";
-import type { Estado, ResidesValue } from "./lib/commerce";
+import type { Estado } from "./lib/commerce";
 import type { Horario } from "./lib/horario";
 
 /**
@@ -30,7 +30,6 @@ type SeedCommerce = {
   whatsapp: string;
   horario: Horario;
   instagram: string;
-  resides: ResidesValue;
   notas: string;
   estado: Estado;
 };
@@ -69,7 +68,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234567",
     horario: semanal("Lun – Vie", 690, 900),
     instagram: "sazon.abuela",
-    resides: "Resido en Monteazul",
     notas: "Acepta transferencia y efectivo. Domicilios dentro de las torres.",
     estado: "publicado",
   },
@@ -84,7 +82,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234501",
     horario: semanal("Lun – Dom", 360, 1200),
     instagram: "eltrigal.pan",
-    resides: "Resido cerca de la zona",
     notas: "Tortas por encargo con 2 días de anticipación.",
     estado: "publicado",
   },
@@ -99,7 +96,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234502",
     horario: semanal("Mar – Dom", 780, 1260),
     instagram: "dulce.monte",
-    resides: "Resido en Monteazul",
     notas: "Suspendido temporalmente por vacaciones del propietario.",
     estado: "suspendido",
   },
@@ -114,7 +110,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234503",
     horario: semanal("Lun – Sáb", 420, 1140),
     instagram: "lacosecha.fruver",
-    resides: "No resido cerca de la zona",
     notas: "Entregas antes de las 9:00 con pedido del día anterior.",
     estado: "publicado",
   },
@@ -129,7 +124,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234504",
     horario: disponible("sobre pedido"),
     instagram: "carnes.donrey",
-    resides: "Resido cerca de la zona",
     notas: "Pedidos por encargo, entrega en 24 horas.",
     estado: "publicado",
   },
@@ -144,7 +138,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234505",
     horario: semanal("Lun – Vie", 480, 1080),
     instagram: "verde.vida",
-    resides: "Resido en Monteazul",
     notas: "Fiche recién enviada, pendiente de aprobación.",
     estado: "pendiente",
   },
@@ -159,7 +152,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234506",
     horario: semanal("Mié – Dom", 600, 960),
     instagram: "delicias.marta",
-    resides: "Resido cerca de la zona",
     notas: "Atiende principalmente fines de semana.",
     estado: "publicado",
   },
@@ -173,7 +165,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234507",
     horario: semanal("Lun – Dom", 540, 1140),
     instagram: "huellitas.pet",
-    resides: "Resido en Monteazul",
     notas: "Baño con cita, venta de alimento sin cita.",
     estado: "publicado",
   },
@@ -187,7 +178,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234508",
     horario: semanal("Mar – Sáb", 540, 1080),
     instagram: "aura.belleza",
-    resides: "Resido cerca de la zona",
     notas: "Promociones entre semana.",
     estado: "publicado",
   },
@@ -201,7 +191,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234509",
     horario: disponible("con cita previa"),
     instagram: "fisio.bienestar",
-    resides: "No resido cerca de la zona",
     notas: "Atención con cita previa, incluye visitas a domicilio.",
     estado: "publicado",
   },
@@ -215,7 +204,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234510",
     horario: semanal("Lun – Sáb", 600, 1140),
     instagram: "moda.andina",
-    resides: "Resido en Monteazul",
     notas: "Arreglos a la medida con costo adicional.",
     estado: "publicado",
   },
@@ -229,7 +217,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234511",
     horario: disponible("sobre pedido"),
     instagram: "tejidos.monteazul",
-    resides: "Resido cerca de la zona",
     notas: "Tiempos de entrega según el trabajo.",
     estado: "publicado",
   },
@@ -243,7 +230,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234512",
     horario: semanal("Lun – Sáb", 540, 1080),
     instagram: "tecnofix.mz",
-    resides: "Resido en Monteazul",
     notas: "Garantía de 30 días en reparaciones.",
     estado: "publicado",
   },
@@ -257,7 +243,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234513",
     horario: disponible("con cita previa"),
     instagram: "servicios.hogar.mz",
-    resides: "No resido cerca de la zona",
     notas: "Cotizaciones sin costo, con cita previa.",
     estado: "publicado",
   },
@@ -271,7 +256,6 @@ const SEED_COMMERCES: SeedCommerce[] = [
     whatsapp: "3001234514",
     horario: semanal("Lun – Vie", 600, 1020),
     instagram: "trueques.barrio",
-    resides: "Resido en Monteazul",
     notas: "Iniciativa comunitaria, pendiente de revisión.",
     estado: "pendiente",
   },
@@ -328,7 +312,6 @@ export const seedDev = internalMutation({
         horario: seed.horario,
         instagram: seed.instagram,
         contactName: seed.contactName,
-        resides: seed.resides,
         notas: seed.notas,
         estado: seed.estado,
         ownerId,

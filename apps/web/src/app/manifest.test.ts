@@ -8,8 +8,8 @@ describe("PWA manifest", () => {
   const data = manifest();
 
   it("declares an installable standalone Spanish app", () => {
-    expect(data.name).toBe("Directorio Monteazul");
-    expect(data.short_name).toBe("Monteazul");
+    expect(data.name).toBe("Cerka");
+    expect(data.short_name).toBe("Cerka");
     expect(data.display).toBe("standalone");
     expect(data.start_url).toBe("/");
     expect(data.lang).toBe("es");

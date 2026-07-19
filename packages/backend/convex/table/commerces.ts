@@ -13,14 +13,12 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { type EstadoAction, estadoAfter } from "../lib/approval";
 import {
-  RESIDES_VALUES,
   assertValidCommerceForm,
   categoryValidator,
   commerceWriteFields,
   estadoValidator,
   horarioValidator,
   normalizeForSearch,
-  residesValidator,
 } from "../lib/commerce";
 import {
   requireAuthenticated,
@@ -35,8 +33,8 @@ import {
 
 /**
  * Commerce — the central entity of the directory (see CONTEXT.md). Always owned
- * by exactly one account (`ownerId`). Internal fields (`resides`, `notas`,
- * `estado`, `ownerId`) are admin-only and never surfaced by public queries.
+ * by exactly one account (`ownerId`). Internal fields (`notas`, `estado`,
+ * `ownerId`) are admin-only and never surfaced by public queries.
  */
 const documentSchema = {
   name: v.string(),
@@ -74,8 +72,11 @@ const documentSchema = {
   // recomputed on every write. Backs the `search_text` index — Convex has no
   // native accent folding, so search happens on this normalised field.
   searchText: v.string(),
+  // LEGACY (Ronda 13): ¿Resides en Monteazul? is no longer collected, written
+  // nor displayed anywhere — the platform expands beyond Monteazul. The field
+  // stays optional so pre-existing rows remain valid, inert.
+  resides: v.optional(v.string()),
   // Internal, admin-only:
-  resides: residesValidator,
   notas: v.optional(v.string()),
   estado: estadoValidator,
   ownerId: v.id("users"),
@@ -142,7 +143,7 @@ export async function toPublicCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     coverFocusX: doc.coverFocusX,
     coverZoom: doc.coverZoom,
     horario: doc.horario,
-    // `torreApto` (legacy, no longer collected) stays unexposed as ever.
+    // `torreApto` and `resides` (legacy, no longer collected) stay unexposed.
     instagram: doc.instagram,
     contactName: doc.contactName,
   };
@@ -260,7 +261,7 @@ export const searchPublic = query({
  * return `null` so the web app renders its "no encontrado" page. Accepts a raw
  * string id (the URL param) and normalises it, so a deep link with garbage in
  * the path degrades gracefully instead of throwing. Never leaks the internal
- * fields (`resides`, `notas`, `estado`, `ownerId`).
+ * fields (`notas`, `estado`, `ownerId`).
  */
 export const getPublicById = query({
   args: { id: v.string() },
@@ -276,8 +277,8 @@ export const getPublicById = query({
 /**
  * Owner projection of a Commerce — the fiche as its Entrepreneur sees it in
  * « Mi negocio », including the `estado` (e.g. `pendiente` = pending approval)
- * and the internal fields the owner themselves submitted (`resides`, `notas`).
- * Only ever returned to the owner (see `myCommerce`), never to the public.
+ * and the internal notes the owner themselves submitted (`notas`). Only ever
+ * returned to the owner (see `myCommerce`), never to the public.
  */
 export async function toOwnerCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
   const photos = await resolveOwnerPhotos(ctx, doc.photos);
@@ -298,7 +299,6 @@ export async function toOwnerCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     horario: doc.horario,
     instagram: doc.instagram,
     contactName: doc.contactName,
-    resides: doc.resides,
     notas: doc.notas,
     estado: doc.estado,
   };
@@ -336,7 +336,6 @@ export const getFormOptions = query({
     categories: COMMERCE_CATEGORIES,
     comidaCategory: COMIDA_CATEGORY,
     comidaSubcategories: COMIDA_SUBCATEGORIES,
-    residesValues: RESIDES_VALUES,
   }),
 });
 
@@ -384,11 +383,11 @@ export async function validatedPhotoAttachments(
  * submission — approval only publishes (see CONTEXT.md). Enforces the 1:1 rule
  * (one account owns exactly one Commerce: a second submission is refused) and
  * the business-rule validation (WhatsApp exactly 10 digits, sub-categories only
- * for « Comida y bebida », ¿Resides? among the three values), surfacing a
- * Spanish `ConvexError` message the form renders inline.
+ * for « Comida y bebida »), surfacing a Spanish `ConvexError` message the form
+ * renders inline.
  *
- * `category` and `resides` are accepted as plain strings and validated here (so
- * the back-office passes the form values as-is); once validated they match the
+ * `category` is accepted as a plain string and validated here (so the
+ * back-office passes the form values as-is); once validated it matches the
  * strict schema validators on insert.
  *
  * `photos` are optional pre-uploaded blobs (see `generateSubmissionUploadUrl`),
@@ -422,7 +421,6 @@ export const submitCommerce = mutation({
     horario: horarioValidator,
     instagram: v.optional(v.string()),
     contactName: v.optional(v.string()),
-    resides: v.string(),
     notas: v.optional(v.string()),
     photos: v.optional(v.array(submittedPhotoValidator)),
     // Cover framing chosen in the wizard BEFORE the fiche exists (the edit
@@ -509,9 +507,9 @@ export const generateSubmissionUploadUrl = mutation({
 /**
  * Edit the caller's OWN fiche from « Mi negocio », with the SAME validations as
  * the submission (`submitCommerce`): WhatsApp exactly 10 digits, sub-categories
- * only for « Comida y bebida », ¿Resides? among the three values. Recomputes the
- * search haystack. Guarded by `requireCommerceOwner`, so only the owner may edit
- * — never another account (a non-owner is refused).
+ * only for « Comida y bebida ». Recomputes the search haystack. Guarded by
+ * `requireCommerceOwner`, so only the owner may edit — never another account
+ * (a non-owner is refused).
  *
  * Crucially, it NEVER changes the `estado` nor the `ownerId`: editing a
  * `publicado` fiche keeps it online with the changes (moderación a posteriori),
@@ -529,7 +527,6 @@ export const updateMyCommerce = mutation({
     horario: horarioValidator,
     instagram: v.optional(v.string()),
     contactName: v.optional(v.string()),
-    resides: v.string(),
     notas: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

@@ -18,14 +18,6 @@ import type { Horario } from "./horario";
 export const ESTADOS = ["pendiente", "publicado", "suspendido"] as const;
 export type Estado = (typeof ESTADOS)[number];
 
-/** ¿Resides en Monteazul? — the three exact Notion values (spec §2). */
-export const RESIDES_VALUES = [
-  "Resido en Monteazul",
-  "Resido cerca de la zona",
-  "No resido cerca de la zona",
-] as const;
-export type ResidesValue = (typeof RESIDES_VALUES)[number];
-
 /** WhatsApp = exactly 10 digits, without +57 nor spaces (spec §2 / §4). */
 const WHATSAPP_PATTERN = /^\d{10}$/;
 
@@ -35,10 +27,6 @@ export const categoryValidator = v.union(
 
 export const estadoValidator = v.union(
   ...ESTADOS.map((estado) => v.literal(estado)),
-);
-
-export const residesValidator = v.union(
-  ...RESIDES_VALUES.map((value) => v.literal(value)),
 );
 
 /** One open window — mirrors `ServiceWindow` in `lib/horario`. */
@@ -138,9 +126,9 @@ export function commerceSearchText(input: SearchableCommerce): string {
 
 /**
  * The fields a fiche form provides — the shared shape of the entrepreneur
- * submission, the entrepreneur edit and the admin edit. Category and resides are
- * plain strings here (validated by `assertValidCommerceForm`) so the back-office
- * can pass the form values as-is.
+ * submission, the entrepreneur edit and the admin edit. Category is a plain
+ * string here (validated by `assertValidCommerceForm`) so the back-office can
+ * pass the form values as-is.
  */
 export type CommerceFormInput = {
   name: string;
@@ -156,16 +144,17 @@ export type CommerceFormInput = {
   horario?: Horario;
   instagram?: string;
   contactName?: string;
-  resides: string;
+  // `resides` (¿Resides en Monteazul?) is LEGACY since Ronda 13: no longer
+  // collected — the platform expands beyond Monteazul.
   notas?: string;
 };
 
 /**
  * Enforce the shared fiche-form business rules — the ones a Convex schema
  * validator cannot express: WhatsApp exactly 10 digits, sub-categories only for
- * « Comida y bebida », ¿Resides? among the three values. Throws a Spanish
- * `Error` on the first violation; the mutations wrap it in a `ConvexError`.
- * Single source of truth so submission and every edit validate identically.
+ * « Comida y bebida ». Throws a Spanish `Error` on the first violation; the
+ * mutations wrap it in a `ConvexError`. Single source of truth so submission
+ * and every edit validate identically.
  */
 export function assertValidCommerceForm(input: CommerceFormInput): void {
   assertValidCommerce({
@@ -173,9 +162,6 @@ export function assertValidCommerceForm(input: CommerceFormInput): void {
     subcategories: input.subcategories,
     whatsapp: input.whatsapp,
   });
-  if (!RESIDES_VALUES.includes(input.resides as ResidesValue)) {
-    throw new Error("El valor de ¿Resides en Monteazul? no es válido.");
-  }
 }
 
 /**
@@ -206,7 +192,6 @@ export function commerceWriteFields(input: CommerceFormInput) {
       subcategories,
       description: input.description,
     }),
-    resides: input.resides as ResidesValue,
     notas: input.notas,
   };
 }

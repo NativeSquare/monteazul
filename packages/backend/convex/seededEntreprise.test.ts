@@ -30,7 +30,6 @@ const validFiche = {
   horario: { mode: "semanal" as const, windows: [{ dayOfWeek: 1, from: 450, to: 960 }] },
   instagram: "https://instagram.com/panaderiaelsol",
   contactName: "María López",
-  resides: "Resido en Monteazul" as const,
   notas: "Pagos en efectivo y Nequi.",
 };
 
@@ -162,7 +161,7 @@ describe("createSeededEntreprise — cuenta y ficha", () => {
     expect(commerces[0].name).toBe("Panadería El Sol");
     expect(commerces[0].whatsapp).toBe("3001234567");
     // Champs internes conservés.
-    expect(commerces[0].resides).toBe("Resido en Monteazul");
+    expect(commerces[0].notas).toBe("Pagos en efectivo y Nequi.");
     // Haystack de recherche recalculé (accents pliés).
     expect(commerces[0].searchText).toContain("panaderia");
   });
@@ -439,18 +438,6 @@ describe("createSeededEntreprise — validación de la ficha", () => {
         subcategories: ["Otros"],
       }),
     ).rejects.toThrow(/comida y bebida/i);
-  });
-
-  test("rechaza un valor ¿Resides? no válido", async () => {
-    const t = convexTest(schema, modules);
-    const { admin } = await asAdmin(t);
-    await expect(
-      admin.mutation(api.table.seededEntreprise.createSeededEntreprise, {
-        email: "res@example.com",
-        ...validFiche,
-        resides: "Tal vez",
-      }),
-    ).rejects.toThrow(/resides/i);
   });
 
   test("rechaza un correo con formato inválido sin escritura parcial", async () => {

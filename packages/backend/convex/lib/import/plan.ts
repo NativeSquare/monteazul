@@ -13,8 +13,8 @@
  *  - Duplicate `Correo` → HARD abort (`report.ok === false`, zero fiches). The
  *    operator de-duplicates the CSV and re-runs (PRD).
  *  - A row without `Correo` → ignored and listed (cannot seed an account).
- *  - A per-row validation failure (WhatsApp, ¿Resides?, Categoría) → the row is
- *    flagged and skipped, but the rest of the import still proceeds.
+ *  - A per-row validation failure (WhatsApp, Categoría) → the row is flagged
+ *    and skipped, but the rest of the import still proceeds.
  *  - Unmapped free-text `Horario` → the fiche is imported WITHOUT a horario and
  *    flagged, so the operator can complete the correspondence table.
  *  - Unknown/empty `Estado` → defaults to `pendiente` (invisible to the public,
@@ -26,12 +26,7 @@ import {
   COMMERCE_CATEGORIES,
   isComidaCategory,
 } from "@packages/shared/categories";
-import {
-  type CommerceFormInput,
-  type Estado,
-  RESIDES_VALUES,
-  type ResidesValue,
-} from "../commerce";
+import { type CommerceFormInput, type Estado } from "../commerce";
 import type { Horario } from "../horario";
 import type { NotionRow } from "./csv";
 
@@ -54,8 +49,6 @@ export type ImportReport = {
   rowsWithoutCorreo: { line: number; name: string }[];
   /** Rows skipped: WhatsApp could not be normalized to 10 digits. */
   invalidWhatsapp: RowIssue[];
-  /** Rows skipped: ¿Resides en Monteazul? outside the three allowed values. */
-  invalidResides: RowIssue[];
   /** Rows skipped: Categoría not in the shared taxonomy. */
   unknownCategory: RowIssue[];
   /** Rows imported anyway, but with sub-categories dropped (not Comida y bebida). */
@@ -85,7 +78,6 @@ const empty = (): ImportReport => ({
   duplicateCorreos: [],
   rowsWithoutCorreo: [],
   invalidWhatsapp: [],
-  invalidResides: [],
   unknownCategory: [],
   droppedSubcategories: [],
   unmappedHorario: [],
@@ -225,12 +217,8 @@ export function buildImportPlan(
       continue;
     }
 
-    const resides = cell("¿Resides en Monteazul?");
-    if (!RESIDES_VALUES.includes(resides as ResidesValue)) {
-      report.invalidResides.push({ line, correo, raw: resides });
-      continue;
-    }
-
+    // "¿Resides en Monteazul?" is still parsed as a CSV column (historical
+    // format) but no longer lands on the fiche (Ronda 13 — legacy field).
     const { subcategories, droppedOutsideComida } = normalizeSubcategories(
       category,
       cell("Subcategoría"),
@@ -260,7 +248,6 @@ export function buildImportPlan(
       // format) but no longer lands on the fiche (Ronda 12 - legacy field).
       instagram: optional(cell("Instagram / redes")),
       contactName: optional(cell("Nombre de contacto")),
-      resides,
       notas: optional(cell("Notas")),
     };
 

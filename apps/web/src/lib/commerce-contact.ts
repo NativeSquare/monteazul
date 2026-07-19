@@ -14,7 +14,7 @@ const COLOMBIA_CODE = "57";
  * Prefilled Spanish message opened with the WhatsApp chat (spec §4). Matches
  * the Claude Design prototype wording.
  */
-export const WHATSAPP_PREFILL = "Hola, te escribo desde el directorio de Monteazul";
+export const WHATSAPP_PREFILL = "Hola, te escribo desde el directorio de Cerka";
 
 /**
  * Formats a 10-digit WhatsApp number as « +57 XXX XXX XXXX » for display, like

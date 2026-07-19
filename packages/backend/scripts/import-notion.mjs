@@ -154,7 +154,6 @@ function printReport(report) {
   line("duplicate Correo", report.duplicateCorreos);
   line("rows without Correo (ignored)", report.rowsWithoutCorreo);
   line("invalid WhatsApp (skipped)", report.invalidWhatsapp);
-  line("invalid ¿Resides? (skipped)", report.invalidResides);
   line("unknown Categoría (skipped)", report.unknownCategory);
   line("sub-categories dropped (not Comida)", report.droppedSubcategories);
   line("unmapped Horario (imported without hours)", report.unmappedHorario);

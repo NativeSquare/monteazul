@@ -257,13 +257,13 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild tooltip="Directorio Monteazul">
+            <SidebarMenuButton size="lg" asChild tooltip="Cerka">
               <Link href="/negocios">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-primary">
                   <IconInnerShadowTop className="size-5 text-primary-foreground" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-medium">Directorio Monteazul</span>
+                  <span className="font-medium">Cerka</span>
                   <span className="text-xs text-muted-foreground">
                     Administración
                   </span>

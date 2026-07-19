@@ -31,7 +31,7 @@ import {
  * fields and their labels in one place, so the surfaces can never drift.
  *
  * The fields come in three groups matching the sectioned card design
- * (`CommerceBasicsFields`, `CommerceContactFields`, `CommerceLocationFields`)
+ * (`CommerceBasicsFields`, `CommerceContactFields`, `CommerceNotasFields`)
  * plus the `HorarioEditor`; sectioned forms compose the groups into their own
  * cards, while `CommerceFields` renders them flat for the single-card admin
  * forms. Business-rule validation itself lives in the backend
@@ -59,7 +59,6 @@ export type CommerceFieldsValues = {
   whatsapp: string;
   instagram?: string;
   contactName: string;
-  resides: string;
   notas?: string;
 };
 
@@ -240,57 +239,27 @@ export function CommerceContactFields({
   );
 }
 
-/** « Ubicación y detalles » — resides, internal notes. */
-export function CommerceLocationFields({
+/** « Notas para la administración » — private notes, never published. */
+export function CommerceNotasFields({
   control,
-  options,
-  residesLabel = "¿Resides en Monteazul?",
-  notasLabel = "Notas",
 }: {
   control: Control<CommerceFieldsValues>;
-  options: FormOptions;
-  residesLabel?: string;
-  notasLabel?: string;
 }) {
   return (
-    <>
-      <Controller
-        name="resides"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="resides">{residesLabel}<RequiredMark /></FieldLabel>
-            <NativeSelect
-              {...field}
-              id="resides"
-              aria-invalid={fieldState.invalid}
-              className="w-full"
-            >
-              <NativeSelectOption value="">
-                Selecciona una opción
-              </NativeSelectOption>
-              {options.residesValues.map((value) => (
-                <NativeSelectOption key={value} value={value}>
-                  {value}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-
-      <Controller
-        name="notas"
-        control={control}
-        render={({ field }) => (
-          <Field>
-            <FieldLabel htmlFor="notas">{notasLabel}</FieldLabel>
-            <Textarea {...field} id="notas" rows={2} />
-          </Field>
-        )}
-      />
-    </>
+    <Controller
+      name="notas"
+      control={control}
+      render={({ field }) => (
+        <Field>
+          <FieldLabel htmlFor="notas">Notas para la administración</FieldLabel>
+          <Textarea {...field} id="notas" rows={2} />
+          <FieldDescription>
+            No se publican en el directorio. Úsalas para aclaraciones
+            importantes dirigidas al administrador.
+          </FieldDescription>
+        </Field>
+      )}
+    />
   );
 }
 
@@ -304,8 +273,6 @@ export function CommerceFields({
   horario,
   onHorarioChange,
   horarioError,
-  residesLabel,
-  notasLabel,
 }: {
   control: Control<CommerceFieldsValues>;
   options: FormOptions;
@@ -315,8 +282,6 @@ export function CommerceFields({
   horario: Horario;
   onHorarioChange: (next: Horario) => void;
   horarioError: string | null;
-  residesLabel?: string;
-  notasLabel?: string;
 }) {
   return (
     <>
@@ -336,12 +301,7 @@ export function CommerceFields({
         error={horarioError}
       />
 
-      <CommerceLocationFields
-        control={control}
-        options={options}
-        residesLabel={residesLabel}
-        notasLabel={notasLabel}
-      />
+      <CommerceNotasFields control={control} />
     </>
   );
 }

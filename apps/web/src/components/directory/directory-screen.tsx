@@ -86,7 +86,7 @@ export function DirectoryScreen() {
     ? me.name?.trim()
       ? `Bienvenido, ${me.name.trim()}`
       : "Bienvenido"
-    : "Directorio Monteazul";
+    : "Cerka";
 
   return (
     <div className="mx-auto min-h-screen max-w-[480px] bg-surface shadow-[0_0_60px_rgba(20,30,50,0.1)] lg:max-w-6xl lg:shadow-none">

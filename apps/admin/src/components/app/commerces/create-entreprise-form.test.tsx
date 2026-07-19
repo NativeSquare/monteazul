@@ -31,11 +31,6 @@ const FORM_OPTIONS = {
   categories: ["Comida y bebida", "Tecnología", "Otro"],
   comidaCategory: "Comida y bebida",
   comidaSubcategories: ["Panadería y repostería"],
-  residesValues: [
-    "Resido en Monteazul",
-    "Resido cerca de la zona",
-    "No resido cerca de la zona",
-  ],
 } as unknown as FormOptions;
 
 function setupClient(createFake: (args: CreateArgs) => CreateReturn) {
@@ -70,9 +65,6 @@ function fillValidFiche() {
   fireEvent.change(screen.getByLabelText(/nombre de contacto/i), {
     target: { value: "Ana García" },
   });
-  fireEvent.change(screen.getByLabelText(/resides en monteazul/i), {
-    target: { value: "Resido en Monteazul" },
-  });
 }
 
 describe("CreateEntrepriseForm", () => {
@@ -86,6 +78,14 @@ describe("CreateEntrepriseForm", () => {
     const client = setupClient(createFake);
 
     renderWithConvex(<CreateEntrepriseForm />, { client });
+
+    // The internal-info block only carries the admin notes now (Ronda 13):
+    // the ¿Resides en Monteazul? field is gone, the notes label says what
+    // the field is for.
+    expect(screen.queryByLabelText(/resides en monteazul/i)).toBeNull();
+    expect(
+      screen.getByLabelText(/notas para la administración/i),
+    ).toBeTruthy();
 
     fillValidFiche();
     fireEvent.click(

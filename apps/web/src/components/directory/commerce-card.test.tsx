@@ -36,7 +36,7 @@ vi.mock("./whatsapp-toast", async (importOriginal) => {
 });
 
 const WA_HREF =
-  "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul";
+  "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Cerka";
 
 const commerce: DirectoryCommerce = {
   _id: "commerce_42" as unknown as Id<"commerces">,

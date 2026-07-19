@@ -67,7 +67,6 @@ function editArgs(
     description: "Descripción editada por el dueño.",
     whatsapp: "3001234567",
     horario: { mode: "semanal" as const, windows: [{ dayOfWeek: 1, from: 540, to: 1080 }] },
-    resides: "Resido en Monteazul",
     ...over,
   };
 }

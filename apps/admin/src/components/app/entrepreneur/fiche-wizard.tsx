@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import {
   IconClock,
   IconInfoCircle,
-  IconMapPin,
+  IconNotes,
   IconPhone,
   IconPhoto,
 } from "@tabler/icons-react";
@@ -29,7 +29,7 @@ import {
 import {
   CommerceBasicsFields,
   CommerceContactFields,
-  CommerceLocationFields,
+  CommerceNotasFields,
 } from "@/components/app/commerces/commerce-fields";
 import { SectionTitle } from "@/components/app/commerces/section-title";
 import {
@@ -59,7 +59,6 @@ const formSchema = z.object({
     ),
   instagram: z.string().optional(),
   contactName: z.string().min(1, "El nombre de contacto es obligatorio."),
-  resides: z.string().min(1, "Indica si resides en Monteazul."),
   notas: z.string().optional(),
 });
 
@@ -108,7 +107,6 @@ export function FicheWizard() {
       instagram: "",
       contactName: "",
       infoExtra: "",
-      resides: "",
       notas: "",
     },
   });
@@ -171,7 +169,6 @@ export function FicheWizard() {
         horario,
         instagram: data.instagram || undefined,
         contactName: data.contactName || undefined,
-        resides: data.resides,
         notas: data.notas || undefined,
         photos: photoIds.length > 0 ? photoIds : undefined,
         ...(photoIds.length > 0 ? coverFrame : {}),
@@ -269,19 +266,16 @@ export function FicheWizard() {
           </CardContent>
         </Card>
 
-        {/* Ubicación y detalles */}
+        {/* Notas para la administración */}
         <Card>
           <CardHeader>
-            <SectionTitle icon={IconMapPin} accent="bg-rose-100 text-rose-700">
-              Ubicación y detalles
+            <SectionTitle icon={IconNotes} accent="bg-rose-100 text-rose-700">
+              Notas para la administración
             </SectionTitle>
           </CardHeader>
           <CardContent>
             <FieldGroup>
-              <CommerceLocationFields
-                control={form.control}
-                options={options}
-              />
+              <CommerceNotasFields control={form.control} />
             </FieldGroup>
           </CardContent>
         </Card>

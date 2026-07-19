@@ -19,15 +19,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Directorio Monteazul",
+  title: "Cerka — Directorio de Emprendimientos",
   description:
-    "Directorio de negocios de la comunidad Monteazul: descubre y contacta a los emprendedores de tu comunidad.",
+    "Cerka: descubre y contacta a los emprendedores de tu comunidad y la zona.",
   // iOS « Añadir a pantalla de inicio »: standalone app window, own title.
   // (The manifest — app/manifest.ts — covers Android; apple-icon.png is
   // auto-linked as the apple-touch-icon by the file convention.)
   appleWebApp: {
     capable: true,
-    title: "Monteazul",
+    title: "Cerka",
     statusBarStyle: "default",
   },
 };

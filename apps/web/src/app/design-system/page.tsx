@@ -49,7 +49,7 @@ export default function DesignSystemPage() {
             Design system
           </h1>
           <p className="mt-1 text-sm text-ink-muted">
-            Primitivas del Directorio Monteazul · apps/web
+            Primitivas del Directorio Cerka · apps/web
           </p>
         </header>
 

@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  ESTADOS,
-  RESIDES_VALUES,
-  assertValidCommerce,
-} from "./lib/commerce";
+import { ESTADOS, assertValidCommerce } from "./lib/commerce";
 
 const base = {
   category: "Comida y bebida" as const,
@@ -73,13 +69,5 @@ describe("assertValidCommerce — category & WhatsApp", () => {
 describe("Commerce enums", () => {
   it("defines the three estados of the lifecycle", () => {
     expect(ESTADOS).toEqual(["pendiente", "publicado", "suspendido"]);
-  });
-
-  it("defines the three ¿Resides en Monteazul? values from the spec", () => {
-    expect(RESIDES_VALUES).toEqual([
-      "Resido en Monteazul",
-      "Resido cerca de la zona",
-      "No resido cerca de la zona",
-    ]);
   });
 });

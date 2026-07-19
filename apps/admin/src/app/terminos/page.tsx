@@ -3,9 +3,9 @@ import { TERMINOS } from "@packages/shared/legal";
 import { LegalDocument } from "@/components/app/legal/legal-document";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones — Monteazul",
+  title: "Términos y Condiciones — Cerka",
   description:
-    "Términos y Condiciones de Uso de la Plataforma Monteazul, directorio de emprendimientos.",
+    "Términos y Condiciones de Uso de la Plataforma Cerka, directorio de emprendimientos.",
 };
 
 export default function TerminosPage() {

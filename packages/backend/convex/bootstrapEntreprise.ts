@@ -45,7 +45,6 @@ export const bootstrapEntreprise = internalMutation({
     horario: horarioValidator,
     instagram: v.optional(v.string()),
     contactName: v.optional(v.string()),
-    resides: v.string(),
     notas: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

@@ -48,7 +48,6 @@ export const createSeededEntreprise = mutation({
     horario: horarioValidator,
     instagram: v.optional(v.string()),
     contactName: v.optional(v.string()),
-    resides: v.string(),
     notas: v.optional(v.string()),
     // Pre-uploaded vitrine photos (see `generateSubmissionUploadUrl`), same
     // contract and validation as `submitCommerce` — order = vitrine order.

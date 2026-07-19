@@ -118,7 +118,7 @@ export function RegistroForm({ className, ...props }: React.ComponentProps<"div"
                 <h1 className="text-2xl font-bold">Crea tu cuenta</h1>
                 <p className="text-muted-foreground text-balance">
                   Regístrate para publicar tu negocio en el directorio de
-                  Monteazul.
+                  Cerka.
                 </p>
               </div>
 

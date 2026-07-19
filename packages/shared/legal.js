@@ -1,11 +1,12 @@
 /**
- * Legal documents of the Plataforma Monteazul — single source of truth shared
+ * Legal documents of the Plataforma Cerka — single source of truth shared
  * by the public annuaire (apps/web) and the back-office (apps/admin), which
  * each render them on their own /terminos and /privacidad routes so the
  * sign-up consent links work regardless of the app's domain.
  *
- * Content authored by the product owner (10 de julio de 2026). Update HERE,
- * never in the app renderers.
+ * Content authored by the product owner (19 de julio de 2026, Ronda 13 —
+ * rebrand Cerka + Instagram + retrait torre/apartamento y residencia).
+ * Update HERE, never in the app renderers.
  */
 
 /** @typedef {import("./legal").LegalDoc} LegalDoc */
@@ -14,10 +15,10 @@
 export const TERMINOS = {
   slug: "terminos",
   title: "Términos y Condiciones de Uso",
-  subtitle: "Plataforma Monteazul — Directorio de Emprendimientos",
-  updatedAt: "10 de julio de 2026",
+  subtitle: "Plataforma Cerka — Directorio de Emprendimientos",
+  updatedAt: "19 de julio de 2026",
   intro: [
-    "Los presentes Términos y Condiciones (que llamaremos los « Términos ») regulan el acceso y uso de la plataforma web Monteazul (que llamaremos la « Plataforma »), un directorio digital cuyo único fin es dar visibilidad a los emprendimientos y negocios de la comunidad y facilitar el contacto entre estos y las personas interesadas. Al acceder o utilizar la Plataforma, el usuario acepta de forma plena y sin reservas estos Términos. Si no está de acuerdo, deberá abstenerse de usar la Plataforma.",
+    "Los presentes Términos y Condiciones (que llamaremos los « Términos ») regulan el acceso y uso de la plataforma web Cerka (que llamaremos la « Plataforma »), un directorio digital cuyo único fin es dar visibilidad a los emprendimientos y negocios de la comunidad y facilitar el contacto entre estos y las personas interesadas. Al acceder o utilizar la Plataforma, el usuario acepta de forma plena y sin reservas estos Términos. Si no está de acuerdo, deberá abstenerse de usar la Plataforma.",
   ],
   sections: [
     {
@@ -35,7 +36,7 @@ export const TERMINOS = {
       blocks: [
         {
           type: "p",
-          text: "La Plataforma es un directorio informativo que reúne y organiza, por categorías, los emprendimientos y negocios de la comunidad Monteazul, permitiendo que las personas interesadas los encuentren con facilidad y se comuniquen directamente con cada emprendedor a través de WhatsApp.",
+          text: "La Plataforma es un directorio informativo que reúne y organiza, por categorías, los emprendimientos y negocios de la comunidad y la zona, permitiendo que las personas interesadas los encuentren con facilidad y se comuniquen directamente con cada emprendedor a través de WhatsApp o, cuando el emprendedor la proporcione, de su cuenta de Instagram.",
         },
         {
           type: "p",
@@ -71,7 +72,7 @@ export const TERMINOS = {
           type: "ul",
           items: [
             "Emprendedores: crean una cuenta para publicar y gestionar la información de su emprendimiento.",
-            "Visitantes: pueden registrar voluntariamente su correo para usar funciones como guardar favoritos. El registro es opcional; sin él, igualmente pueden navegar y contactar por WhatsApp.",
+            "Visitantes: pueden registrar voluntariamente su correo para usar funciones como guardar favoritos. El registro es opcional; sin él, igualmente pueden navegar y contactar por WhatsApp o Instagram.",
           ],
         },
         {
@@ -176,10 +177,10 @@ export const TERMINOS = {
 export const PRIVACIDAD = {
   slug: "privacidad",
   title: "Política de Privacidad y Tratamiento de Datos Personales",
-  subtitle: "Plataforma Monteazul — Directorio de Emprendimientos",
-  updatedAt: "10 de julio de 2026",
+  subtitle: "Plataforma Cerka — Directorio de Emprendimientos",
+  updatedAt: "19 de julio de 2026",
   intro: [
-    "Esta Política de Privacidad describe cómo se recolectan, usan, almacenan y protegen los datos personales de los usuarios de la plataforma Monteazul (que llamaremos la « Plataforma »), en cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás normas colombianas sobre protección de datos personales (Habeas Data).",
+    "Esta Política de Privacidad describe cómo se recolectan, usan, almacenan y protegen los datos personales de los usuarios de la plataforma Cerka (que llamaremos la « Plataforma »), en cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás normas colombianas sobre protección de datos personales (Habeas Data).",
   ],
   sections: [
     {
@@ -208,9 +209,9 @@ export const PRIVACIDAD = {
           items: [
             "Nombre del negocio y nombre de contacto.",
             "Número de WhatsApp.",
+            "Cuenta de Instagram (opcional, únicamente si el emprendedor decide proporcionarla).",
             "Correo electrónico.",
-            "Ubicación dentro de la comunidad (torre y apartamento) e indicación de si reside en Monteazul o cerca/lejos de la zona.",
-            "Información del emprendimiento: descripción, productos o servicios, horarios, condiciones de domicilio, exclusividad en Monteazul, disponibilidad por pedido, e imágenes o PDF de portafolio que el emprendedor decida cargar.",
+            "Información del emprendimiento: descripción, productos o servicios, horarios, condiciones de domicilio, disponibilidad por pedido, e imágenes o PDF de portafolio que el emprendedor decida cargar.",
           ],
         },
         { type: "p", text: "b) Visitantes que se registran voluntariamente:" },
@@ -224,7 +225,7 @@ export const PRIVACIDAD = {
         {
           type: "ul",
           items: [
-            "La Plataforma contabiliza, de forma interna y anónima, el número de visitas a cada ficha y el número de clics en el botón de contacto por WhatsApp. Se trata de un conteo de eventos con fines estadísticos: NO se identifica a la persona que realiza el clic ni se asocia a datos personales.",
+            "La Plataforma contabiliza, de forma interna y anónima, el número de visitas a cada ficha y el número de clics en el botón de contacto por WhatsApp y en el botón de Instagram. Se trata de un conteo de eventos con fines estadísticos: NO se identifica a la persona que realiza el clic ni se asocia a datos personales.",
           ],
         },
       ],
@@ -238,6 +239,7 @@ export const PRIVACIDAD = {
           items: [
             "Publicar y mostrar los emprendimientos en el directorio, organizados por categorías.",
             "Permitir el contacto directo entre las personas interesadas y los emprendedores a través de WhatsApp.",
+            "Redirigir a las personas interesadas a la cuenta de Instagram del emprendedor, cuando este la haya proporcionado, para que puedan contactarlo o conocer más de su emprendimiento por ese medio.",
             "Gestionar las cuentas de usuario y funciones como guardar favoritos.",
             "Revisar y aprobar las publicaciones antes de su difusión.",
             "Elaborar estadísticas anónimas de uso (visitas y clics) para conocer el interés en cada emprendimiento.",

@@ -17,7 +17,7 @@ import { buildImportPlan } from "./lib/import/plan";
  * The whole pipeline is:
  *   1. Validation BEFORE any write (`validate`, dry-run): duplicate `Correo`
  *      aborts with a report; rows without `Correo` are ignored and listed;
- *      invalid WhatsApp / ¿Resides? / Categoría are flagged and skipped.
+ *      invalid WhatsApp / Categoría are flagged and skipped.
  *   2. Normalization (`lib/import/plan`): sub-categories dropped outside Comida,
  *      free-text Horario resolved through a manually-prepared correspondence
  *      table, Estado mapped, `PDF (portafolio)` ignored.

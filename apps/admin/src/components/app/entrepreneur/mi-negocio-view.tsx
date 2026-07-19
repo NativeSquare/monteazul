@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import {
   IconClock,
   IconInfoCircle,
-  IconMapPin,
+  IconNotes,
   IconPhone,
   IconPhoto,
 } from "@tabler/icons-react";
@@ -32,7 +32,7 @@ import {
 import {
   CommerceBasicsFields,
   CommerceContactFields,
-  CommerceLocationFields,
+  CommerceNotasFields,
 } from "@/components/app/commerces/commerce-fields";
 import { SectionTitle } from "@/components/app/commerces/section-title";
 import { PhotoManager } from "@/components/app/entrepreneur/photo-manager";
@@ -88,7 +88,6 @@ const formSchema = z.object({
     ),
   instagram: z.string().optional(),
   contactName: z.string().min(1, "El nombre de contacto es obligatorio."),
-  resides: z.string().min(1, "Indica si resides en Monteazul."),
   notas: z.string().optional(),
 });
 
@@ -97,7 +96,7 @@ type FormValues = z.infer<typeof formSchema>;
 /**
  * « Mi negocio » — the Entrepreneur's self-service screen for the fiche they
  * own. The edit form is split into scannable sections (Información básica,
- * Contacto, Horario, Ubicación y detalles) built from the shared
+ * Contacto, Horario, Notas para la administración) built from the shared
  * `Commerce*Fields` groups (same design as the fiche wizard), each in its own
  * card, with a single persistent "Guardar cambios" action at the bottom. All
  * edits go through `updateMyCommerce` with the SAME validations as submission
@@ -127,7 +126,6 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
       whatsapp: commerce.whatsapp,
       instagram: commerce.instagram ?? "",
       contactName: commerce.contactName ?? "",
-      resides: commerce.resides,
       notas: commerce.notas ?? "",
     },
   });
@@ -167,7 +165,6 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
         horario,
         instagram: data.instagram || undefined,
         contactName: data.contactName || undefined,
-        resides: data.resides,
         notas: data.notas || undefined,
       });
       toast.success("Cambios guardados.");
@@ -290,19 +287,16 @@ export function MiNegocioView({ commerce }: { commerce: Commerce }) {
           </CardContent>
         </Card>
 
-        {/* Ubicación y detalles */}
+        {/* Notas para la administración */}
         <Card>
           <CardHeader>
-            <SectionTitle icon={IconMapPin} accent="bg-rose-100 text-rose-700">
-              Ubicación y detalles
+            <SectionTitle icon={IconNotes} accent="bg-rose-100 text-rose-700">
+              Notas para la administración
             </SectionTitle>
           </CardHeader>
           <CardContent>
             <FieldGroup>
-              <CommerceLocationFields
-                control={form.control}
-                options={options}
-              />
+              <CommerceNotasFields control={form.control} />
             </FieldGroup>
           </CardContent>
         </Card>

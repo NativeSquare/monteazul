@@ -10,10 +10,10 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Directorio Monteazul",
-    short_name: "Monteazul",
+    name: "Cerka",
+    short_name: "Cerka",
     description:
-      "Directorio de negocios de la comunidad Monteazul: descubre y contacta a los emprendedores de tu comunidad.",
+      "Cerka: descubre y contacta a los emprendedores de tu comunidad y la zona.",
     lang: "es",
     start_url: "/",
     display: "standalone",

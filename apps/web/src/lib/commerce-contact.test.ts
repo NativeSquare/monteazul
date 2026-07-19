@@ -20,7 +20,7 @@ describe("formatColombianPhone", () => {
 describe("whatsAppLink", () => {
   it("builds a wa.me link with the Colombia prefix and prefilled message", () => {
     expect(whatsAppLink("3001234567")).toBe(
-      "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul",
+      "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Cerka",
     );
   });
 });

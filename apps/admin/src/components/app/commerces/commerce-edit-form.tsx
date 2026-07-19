@@ -45,7 +45,6 @@ const formSchema = z.object({
     ),
   instagram: z.string().optional(),
   contactName: z.string().min(1, "El nombre de contacto es obligatorio."),
-  resides: z.string().min(1, "Indica si resides en Monteazul."),
   notas: z.string().optional(),
 });
 
@@ -83,7 +82,6 @@ export function CommerceEditForm({ commerce }: { commerce: AdminCommerce }) {
       whatsapp: commerce.whatsapp,
       instagram: commerce.instagram ?? "",
       contactName: commerce.contactName ?? "",
-      resides: commerce.resides,
       notas: commerce.notas ?? "",
     },
   });
@@ -122,7 +120,6 @@ export function CommerceEditForm({ commerce }: { commerce: AdminCommerce }) {
         horario,
         instagram: data.instagram || undefined,
         contactName: data.contactName || undefined,
-        resides: data.resides,
         notas: data.notas || undefined,
       });
       toast.success("Ficha actualizada.");
@@ -169,8 +166,6 @@ export function CommerceEditForm({ commerce }: { commerce: AdminCommerce }) {
                 horario={horario}
                 onHorarioChange={setHorario}
                 horarioError={horarioError}
-                residesLabel="¿Resides en Monteazul? (interno)"
-                notasLabel="Notas (interno)"
               />
             </FieldGroup>
           </form>

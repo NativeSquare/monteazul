@@ -16,7 +16,6 @@ const FICHE = {
   whatsapp: "3001234567",
   horario: { mode: "disponible" as const, label: "Bajo pedido" },
   contactName: "Abuela Prueba",
-  resides: "Resido en Monteazul",
 };
 
 describe("bootstrapEntreprise — import manuel Notion", () => {

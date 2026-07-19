@@ -225,15 +225,16 @@ describe("buildImportPlan — per-row validation", () => {
     expect(fiches).toHaveLength(0);
   });
 
-  test("flags and skips a row with an unrecognized ¿Resides? value", () => {
+  test("imports a row whatever its ¿Resides? cell says (legacy column, Ronda 13)", () => {
     const input = csv(
-      row({ Correo: "bad-res@example.com", "¿Resides en Monteazul?": "Tal vez" }),
+      row({ Correo: "any-res@example.com", "¿Resides en Monteazul?": "Tal vez" }),
     );
     const { report, fiches } = buildImportPlan(parseNotionCsv(input), horarioMap);
-    expect(report.invalidResides.map((r) => r.correo)).toContain(
-      "bad-res@example.com",
-    );
-    expect(fiches).toHaveLength(0);
+    expect(report.importable).toBe(1);
+    expect(fiches).toHaveLength(1);
+    expect(
+      (fiches[0].form as Record<string, unknown>).resides,
+    ).toBeUndefined();
   });
 
   test("flags and skips a row with an unknown Categoría", () => {

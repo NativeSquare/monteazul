@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const CONTACT_PHONE = "+57 319 416 5914";
 // wa.me wants only digits (country code included, no "+", no spaces).
 const WHATSAPP_HREF = `https://wa.me/${CONTACT_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(
-  "Hola, tengo una duda sobre mi negocio en Monteazul.",
+  "Hola, tengo una duda sobre mi negocio en Cerka.",
 )}`;
 
 export default function AyudaPage() {

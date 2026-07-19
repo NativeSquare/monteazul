@@ -26,7 +26,7 @@ function Row({ label, value }: { label: string; value?: string }) {
 
 /**
  * The approval queue: the `pendiente` fiches (oldest first) with their FULL
- * detail — including the internal, admin-only fields `¿Resides?` and `Notas`
+ * detail — including the internal, admin-only field `Notas`
  * (never shown publicly) — so the Super admin can qualify each submission before
  * approving, editing or removing it.
  */
@@ -84,9 +84,8 @@ export function ApprovalQueue() {
               <Row label="Instagram" value={commerce.instagram} />
               <Row label="Nombre de contacto" value={commerce.contactName} />
               <Row label="Propietario" value={commerce.ownerEmail} />
-              {/* Internal, admin-only fields — never surfaced by public queries. */}
-              <Row label="¿Resides en Monteazul?" value={commerce.resides} />
-              <Row label="Notas (interno)" value={commerce.notas} />
+              {/* Internal, admin-only field — never surfaced by public queries. */}
+              <Row label="Notas para la administración" value={commerce.notas} />
             </div>
           </CardContent>
         </Card>

@@ -194,7 +194,7 @@ describe("CommerceDetailScreen", () => {
     renderDetail(makeCommerce());
     const cta = screen.getByRole("link", { name: /Escribir por WhatsApp/ });
     expect(cta.getAttribute("href")).toBe(
-      "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Monteazul",
+      "https://wa.me/573001234567?text=Hola%2C%20te%20escribo%20desde%20el%20directorio%20de%20Cerka",
     );
   });
 

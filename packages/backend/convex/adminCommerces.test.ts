@@ -146,7 +146,6 @@ describe("admin guards", () => {
         description: "x",
         whatsapp: "3001234567",
         horario: { mode: "semanal", windows: [{ dayOfWeek: 1, from: 540, to: 1080 }] },
-        resides: "Resido en Monteazul",
       }),
     ).rejects.toThrow();
   });
@@ -189,7 +188,7 @@ describe("approvalQueue", () => {
     expect(queue.map((c) => c.name)).toEqual(["Primera", "Segunda"]);
   });
 
-  test("exposes the internal fields resides and notas to the admin", async () => {
+  test("exposes the internal notas to the admin, never the legacy resides", async () => {
     const t = convexTest(schema, modules);
     const admin = await makeUser(t, "a@example.com", "admin");
     const owner = await makeUser(t, "o@example.com", "entreprise");
@@ -202,7 +201,7 @@ describe("approvalQueue", () => {
     const queue = await t
       .withIdentity({ subject: admin })
       .query(api.table.adminCommerces.approvalQueue, {});
-    expect(queue[0].resides).toBe("Resido en Monteazul");
+    expect((queue[0] as Record<string, unknown>).resides).toBeUndefined();
     expect(queue[0].notas).toBe("Nota interna confidencial");
     expect(queue[0].estado).toBe("pendiente");
   });
@@ -500,7 +499,6 @@ describe("updateCommerce", () => {
         description: "Servicio actualizado por el administrador.",
         whatsapp: "3011112222",
         horario: { mode: "semanal", windows: [{ dayOfWeek: 1, from: 540, to: 1080 }] },
-        resides: "Resido en Monteazul",
       },
     );
 
@@ -538,7 +536,6 @@ describe("updateCommerce", () => {
           description: "Editada.",
           whatsapp: "3001234567",
           horario: { mode: "semanal", windows: [{ dayOfWeek: 1, from: 540, to: 1080 }] },
-          resides: "Resido en Monteazul",
         },
       );
       expect(await estadoOf(t, admin, id)).toBe(estado);
@@ -564,7 +561,6 @@ describe("updateCommerce", () => {
           description: "x",
           whatsapp: "123",
           horario: { mode: "semanal", windows: [{ dayOfWeek: 1, from: 540, to: 1080 }] },
-          resides: "Resido en Monteazul",
         },
       ),
     ).rejects.toThrow();
@@ -590,7 +586,6 @@ describe("updateCommerce", () => {
           description: "x",
           whatsapp: "3001234567",
           horario: { mode: "semanal", windows: [{ dayOfWeek: 1, from: 540, to: 1080 }] },
-          resides: "Resido en Monteazul",
         },
       ),
     ).rejects.toThrow();
@@ -858,7 +853,7 @@ describe("reorderCategory", () => {
 // -----------------------------------------------------------------------------
 
 describe("internal fields exposure", () => {
-  test("getCommerceForAdmin exposes resides/notas; getPublicById strips them", async () => {
+  test("getCommerceForAdmin exposes notas; getPublicById strips the internals", async () => {
     const t = convexTest(schema, modules);
     const admin = await makeUser(t, "a@example.com", "admin");
     const owner = await makeUser(t, "o@example.com", "entreprise");
@@ -873,7 +868,7 @@ describe("internal fields exposure", () => {
       .query(api.table.adminCommerces.getCommerceForAdmin, {
         commerceId: id,
       })) as Record<string, unknown> | null;
-    expect(adminDoc?.resides).toBe("Resido en Monteazul");
+    expect(adminDoc?.resides).toBeUndefined();
     expect(adminDoc?.notas).toBe("Nota interna confidencial");
 
     const publicDoc = (await t.query(api.table.commerces.getPublicById, {

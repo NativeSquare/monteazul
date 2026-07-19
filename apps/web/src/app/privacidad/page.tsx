@@ -3,9 +3,9 @@ import { PRIVACIDAD } from "@packages/shared/legal";
 import { LegalDocument } from "@/components/legal/legal-document";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad — Monteazul",
+  title: "Política de Privacidad — Cerka",
   description:
-    "Política de Privacidad y Tratamiento de Datos Personales de la Plataforma Monteazul.",
+    "Política de Privacidad y Tratamiento de Datos Personales de la Plataforma Cerka.",
 };
 
 export default function PrivacidadPage() {

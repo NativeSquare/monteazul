@@ -28,15 +28,15 @@ import { requireAdmin } from "../rbac";
  * The Estado transitions are delegated to the pure `approval` state machine, so
  * this module never encodes the allowed transitions itself. Unlike the public
  * projections in `table/commerces.ts`, the admin projection here KEEPS the
- * internal fields (`resides`, `notas`, `estado`, `ownerId`) — those are
- * admin-only and are still never surfaced by the public queries.
+ * internal fields (`notas`, `estado`, `ownerId`) — those are admin-only and
+ * are still never surfaced by the public queries.
  */
 
 /**
  * Admin projection of a Commerce — the full fiche the Super admin needs to
  * moderate it: every public field, the ORDERED photos with their storage id
- * (so the shared photo manager can reorder/delete), the internal fields
- * (`resides`, `notas`), the `estado`, and the owner's contact for context.
+ * (so the shared photo manager can reorder/delete), the internal notes
+ * (`notas`), the `estado`, and the owner's contact for context.
  */
 async function toAdminCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
   const photos = await Promise.all(
@@ -63,7 +63,6 @@ async function toAdminCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
     horario: doc.horario,
     instagram: doc.instagram,
     contactName: doc.contactName,
-    resides: doc.resides,
     notas: doc.notas,
     estado: doc.estado,
     sortOrder: doc.sortOrder,
@@ -75,7 +74,7 @@ async function toAdminCommerce(ctx: QueryCtx, doc: Doc<"commerces">) {
 
 /**
  * The approval queue: all `pendiente` fiches, OLDEST FIRST, with the internal
- * fields (`resides`, `notas`) the admin needs to qualify a submission. The
+ * notes (`notas`) the admin needs to qualify a submission. The
  * `by_estado` index is ordered by (`estado`, `_creationTime`), so its default
  * ascending order already yields oldest-first. Admin only.
  */
@@ -208,7 +207,6 @@ export const updateCommerce = mutation({
     horario: horarioValidator,
     instagram: v.optional(v.string()),
     contactName: v.optional(v.string()),
-    resides: v.string(),
     notas: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

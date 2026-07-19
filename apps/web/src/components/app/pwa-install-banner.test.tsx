@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { PwaInstallBanner } from "./pwa-install-banner";
@@ -43,21 +43,40 @@ describe("PwaInstallBanner", () => {
     vi.restoreAllMocks();
   });
 
-  it("shows the manual instructions on iOS Safari (no install event there)", () => {
+  it("on iOS shows «Ver cómo» instead of the native install button", () => {
     setUserAgent(IOS_UA);
     render(<PwaInstallBanner />);
-    expect(screen.getByText("Instala Directorio Monteazul")).toBeTruthy();
-    expect(
-      screen.getByText(/«Añadir a pantalla de inicio»/),
-    ).toBeTruthy();
+    expect(screen.getByText("Instala Cerka")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ver cómo" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Instalar" })).toBeNull();
+  });
+
+  it("«Ver cómo» opens the visual step-by-step walkthrough (Ronda 13 #3)", async () => {
+    const user = userEvent.setup();
+    setUserAgent(IOS_UA);
+    render(<PwaInstallBanner />);
+    expect(screen.queryByTestId("ios-install-steps")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Ver cómo" }));
+    const steps = within(screen.getByTestId("ios-install-steps"));
+    // The three illustrated steps of the reference flow.
+    expect(steps.getByText(/Compartir/)).toBeTruthy();
+    expect(steps.getByText(/« Ver más »/)).toBeTruthy();
+    expect(
+      steps.getAllByText(/Añadir a pantalla de inicio/).length,
+    ).toBeGreaterThanOrEqual(1);
+
+    await user.click(steps.getByRole("button", { name: "Entendido" }));
+    expect(screen.queryByTestId("ios-install-steps")).toBeNull();
+    // Closing the walkthrough keeps the banner available.
+    expect(screen.getByText("Instala Cerka")).toBeTruthy();
   });
 
   it("never shows inside the installed app (standalone)", () => {
     setUserAgent(IOS_UA);
     setStandalone(true);
     render(<PwaInstallBanner />);
-    expect(screen.queryByText("Instala Directorio Monteazul")).toBeNull();
+    expect(screen.queryByText("Instala Cerka")).toBeNull();
   });
 
   it("dismissing snoozes the banner for the next visits", async () => {
@@ -65,19 +84,19 @@ describe("PwaInstallBanner", () => {
     setUserAgent(IOS_UA);
     const first = render(<PwaInstallBanner />);
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
-    expect(screen.queryByText("Instala Directorio Monteazul")).toBeNull();
+    expect(screen.queryByText("Instala Cerka")).toBeNull();
     first.unmount();
 
     // A fresh mount within the snooze window stays quiet.
     render(<PwaInstallBanner />);
-    expect(screen.queryByText("Instala Directorio Monteazul")).toBeNull();
+    expect(screen.queryByText("Instala Cerka")).toBeNull();
   });
 
   it("on Android, beforeinstallprompt reveals the banner and «Instalar» triggers the native prompt", async () => {
     const user = userEvent.setup();
     setUserAgent(ANDROID_UA);
     render(<PwaInstallBanner />);
-    expect(screen.queryByText("Instala Directorio Monteazul")).toBeNull();
+    expect(screen.queryByText("Instala Cerka")).toBeNull();
 
     const prompt = vi.fn().mockResolvedValue(undefined);
     const event = new Event("beforeinstallprompt") as Event & {

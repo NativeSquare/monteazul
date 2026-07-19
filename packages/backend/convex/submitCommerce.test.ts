@@ -19,7 +19,6 @@ const validArgs = {
   horario: { mode: "semanal" as const, windows: [{ dayOfWeek: 1, from: 450, to: 960 }] },
   instagram: "https://instagram.com/panaderiaelsol",
   contactName: "María",
-  resides: "Resido en Monteazul",
   notas: "Pagos en efectivo y Nequi.",
 };
 
@@ -159,19 +158,6 @@ describe("submitCommerce — validation des champs", () => {
           subcategories: ["Otros"],
         }),
     ).rejects.toThrow(/comida y bebida/i);
-  });
-
-  test("refuse une valeur ¿Resides? hors des trois valeurs autorisées", async () => {
-    const t = convexTest(schema, modules);
-    const userId = await makeAccount(t, "res@example.com");
-    await expect(
-      t
-        .withIdentity({ subject: userId })
-        .mutation(api.table.commerces.submitCommerce, {
-          ...validArgs,
-          resides: "Tal vez",
-        }),
-    ).rejects.toThrow(/resides/i);
   });
 
   test("ne crée aucune fiche ni ne change le rôle quand la validation échoue", async () => {

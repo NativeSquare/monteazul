@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Directorio Monteazul — Administración",
+  title: "Cerka — Administración",
   description:
-    "Panel de administración del Directorio Monteazul: gestiona los negocios, las aprobaciones y las estadísticas.",
+    "Panel de administración de Cerka: gestiona los negocios, las aprobaciones y las estadísticas.",
   // Opt out of machine translation: the back-office is already in its users'
   // language, and translators rewrite the DOM behind React's back — crashes
   // at worst, silently stale admin data at best.

@@ -18,6 +18,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Rebrand Cerka (Ronda 13): the historical monteazul-web.vercel.app link is
+  // widely shared, so every request on it 308-redirects to the new canonical
+  // domain, path included. Both domains point at this same Vercel project.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "monteazul-web.vercel.app" }],
+        destination: "https://cerka-app.vercel.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

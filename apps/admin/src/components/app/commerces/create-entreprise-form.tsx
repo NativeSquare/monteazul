@@ -54,7 +54,6 @@ const formSchema = z.object({
     ),
   instagram: z.string().optional(),
   contactName: z.string().min(1, "El nombre de contacto es obligatorio."),
-  resides: z.string().min(1, "Indica si reside en Monteazul."),
   notas: z.string().optional(),
 });
 
@@ -101,7 +100,6 @@ export function CreateEntrepriseForm() {
       instagram: "",
       contactName: "",
       infoExtra: "",
-      resides: "",
       notas: "",
     },
   });
@@ -177,7 +175,6 @@ export function CreateEntrepriseForm() {
         horario,
         instagram: data.instagram || undefined,
         contactName: data.contactName || undefined,
-        resides: data.resides,
         notas: data.notas || undefined,
         photos: photoIds.length > 0 ? photoIds : undefined,
       });
@@ -259,8 +256,6 @@ export function CreateEntrepriseForm() {
               horario={horario}
               onHorarioChange={setHorario}
               horarioError={horarioError}
-              residesLabel="¿Resides en Monteazul? (interno)"
-              notasLabel="Notas (interno)"
             />
 
             <Field>

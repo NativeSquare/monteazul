@@ -31,7 +31,6 @@ function makeCommerce(
     horario: undefined,
     instagram: undefined,
     contactName: undefined,
-    resides: "Resido en Monteazul",
     notas: undefined,
     estado: "publicado",
     sortOrder: undefined,
@@ -46,7 +45,6 @@ const FORM_OPTIONS = {
   categories: ["Comida y bebida", "Mascotas"],
   comidaCategory: "Comida y bebida",
   comidaSubcategories: [],
-  residesValues: [],
 } as unknown as FunctionReturnType<typeof api.table.commerces.getFormOptions>;
 
 function renderTable(commerces: AdminCommerce[]) {

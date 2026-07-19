@@ -131,7 +131,7 @@ export function LoginForm({
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Bienvenido de nuevo</h1>
                 <p className="text-muted-foreground text-balance">
-                  Inicia sesión en tu cuenta de Monteazul
+                  Inicia sesión en tu cuenta de Cerka
                 </p>
               </div>
               {formError && (
